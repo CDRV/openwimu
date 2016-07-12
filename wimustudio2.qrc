@@ -1,0 +1,36 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>images/bluetooth.png</file>
+        <file>images/SDCard.png</file>
+        <file>images/usb.png</file>
+        <file>images/Settings.png</file>
+        <file>images/WIMUConfig.png</file>
+        <file>images/branch_closed.png</file>
+        <file>images/branch_opened.png</file>
+        <file>images/date_time.png</file>
+        <file>images/power_saving.png</file>
+        <file>images/user_interface.png</file>
+        <file>images/accelero.png</file>
+        <file>images/ble.png</file>
+        <file>images/gps.png</file>
+        <file>images/gyro.png</file>
+        <file>images/IMU.png</file>
+        <file>images/logging.png</file>
+        <file>images/magnet.png</file>
+        <file>images/load.png</file>
+        <file>images/save.png</file>
+        <file>images/connect.png</file>
+        <file>images/read_config.png</file>
+        <file>images/write_config.png</file>
+        <file>images/accelero_off.png</file>
+        <file>images/ble_off.png</file>
+        <file>images/gps_off.png</file>
+        <file>images/gyro_off.png</file>
+        <file>images/IMU_off.png</file>
+        <file>images/logging_off.png</file>
+        <file>images/magnet_off.png</file>
+        <file>images/reset.png</file>
+        <file>images/console.png</file>
+        <file>images/tools.png</file>
+    </qresource>
+</RCC>

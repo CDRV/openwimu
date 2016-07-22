@@ -4,7 +4,16 @@
 
 WIMUSettings::WIMUSettings(QObject *parent) : QObject(parent)
 {
+
+    qRegisterMetaType<WIMUSettings>("WIMUSettings");
+
     setDefaults();
+}
+
+WIMUSettings::WIMUSettings(const WIMUSettings &copy, QObject *parent) :
+       QObject(parent)
+{
+    *this = copy;
 }
 
 void WIMUSettings::setDefaults(){
@@ -91,11 +100,16 @@ void WIMUSettings::unserialize(QByteArray* data){
 quint16 WIMUSettings::size(){
     quint16 size=0;
 
-    size += sizeof(id)+sizeof(hw_id);
-    size += sizeof(version_major)*3;
-    size += sizeof(acc_gain[0])*3*3;
-    size += sizeof(acc_offset[0])*3*3;
-    size += sizeof(crc);
+    //size += sizeof(id)+sizeof(hw_id);
+    size += sizeof(quint16)+sizeof(quint8);
+    //size += sizeof(version_major)*3;
+    size += sizeof(quint8)*3;
+    //size += sizeof(acc_gain[0])*3*3;
+    size += sizeof(qint16)*3*3;
+    //size += sizeof(acc_offset[0])*3*3;
+    size += sizeof(qint16)*3*3;
+    //size += sizeof(crc);
+    size += sizeof(quint32);
 
     return size + 2; // We must align...
 }

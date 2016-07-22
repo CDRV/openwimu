@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QtSerialPort/QSerialPortInfo>
 
+#include "wimu.h"
+
 WIMUConfigDialog::WIMUConfigDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::WIMUConfigDialog)
@@ -13,27 +15,24 @@ WIMUConfigDialog::WIMUConfigDialog(QWidget *parent) :
     ui->setupUi(this);
 
     // Set correct component ID in list
-    ui->lstComponents->item(0)->setData(Qt::UserRole,WIMUConfig::MODULE_ACC);
-    ui->lstComponents->item(1)->setData(Qt::UserRole,WIMUConfig::MODULE_GYRO);
-    ui->lstComponents->item(2)->setData(Qt::UserRole,WIMUConfig::MODULE_MAGNETO);
-    ui->lstComponents->item(3)->setData(Qt::UserRole,WIMUConfig::MODULE_GPS);
-    ui->lstComponents->item(4)->setData(Qt::UserRole,WIMUConfig::MODULE_DATALOGGER);
-    ui->lstComponents->item(5)->setData(Qt::UserRole,WIMUConfig::MODULE_BLE);
-    ui->lstComponents->item(6)->setData(Qt::UserRole,WIMUConfig::MODULE_IMU);
+    ui->lstComponents->item(0)->setData(Qt::UserRole,WIMU::MODULE_ACC);
+    ui->lstComponents->item(1)->setData(Qt::UserRole,WIMU::MODULE_GYRO);
+    ui->lstComponents->item(2)->setData(Qt::UserRole,WIMU::MODULE_MAGNETO);
+    ui->lstComponents->item(3)->setData(Qt::UserRole,WIMU::MODULE_GPS);
+    ui->lstComponents->item(4)->setData(Qt::UserRole,WIMU::MODULE_DATALOGGER);
+    ui->lstComponents->item(5)->setData(Qt::UserRole,WIMU::MODULE_BLE);
+    ui->lstComponents->item(6)->setData(Qt::UserRole,WIMU::MODULE_IMU);
 
     // Connect signals
     connectCheckBoxSignals();
     connectButtonsSignals();
     connectGeneralUISignals();
+    connectWIMUSignals();
 
     // Set default states
     initUIState();
-    m_serialPort = NULL;
     WIMUConfig default_config;
     loadFromConfig(&default_config);
-
-    m_lastSerialCmd="";
-    m_serialBuffer.clear();
 
     // Start clock timer
     connect(&m_clock,SIGNAL(timeout()),this,SLOT(clockUpdate()));
@@ -41,17 +40,12 @@ WIMUConfigDialog::WIMUConfigDialog(QWidget *parent) :
     m_clock.setSingleShot(false);
     m_clock.start();
 
-    m_wimuDateTime.setDate(QDate());
-    m_wimuDateTime.setTime(QTime());
-
+    m_wimuDateTime = QDateTime();
 }
 
 WIMUConfigDialog::~WIMUConfigDialog()
 {
-    if (m_serialPort){
-        m_serialPort->close();
-        m_serialPort->deleteLater();
-    }
+    m_wimuDriver.wimuDisconnect();
 
     delete ui;
 }
@@ -105,25 +99,25 @@ void WIMUConfigDialog::configComponentItemChanged(QListWidgetItem* item){
 QIcon WIMUConfigDialog::getIconForComponent(int index, bool enabled){
     QString icon_path = "";
     switch (index){
-    case WIMUConfig::MODULE_ACC: // Accelero
+    case WIMU::MODULE_ACC: // Accelero
         icon_path = ":/icons/images/accelero";
         break;
-    case WIMUConfig::MODULE_GYRO: // Gyro
+    case WIMU::MODULE_GYRO: // Gyro
         icon_path = ":/icons/images/gyro";
         break;
-    case WIMUConfig::MODULE_MAGNETO: // Magneto
+    case WIMU::MODULE_MAGNETO: // Magneto
         icon_path = ":/icons/images/magnet";
         break;
-    case WIMUConfig::MODULE_GPS: // GPS
+    case WIMU::MODULE_GPS: // GPS
         icon_path = ":/icons/images/gps";
         break;
-    case WIMUConfig::MODULE_DATALOGGER: // Logger
+    case WIMU::MODULE_DATALOGGER: // Logger
         icon_path = ":/icons/images/logging";
         break;
-    case WIMUConfig::MODULE_BLE: // BLE
+    case WIMU::MODULE_BLE: // BLE
         icon_path = ":/icons/images/ble";
         break;
-    case WIMUConfig::MODULE_IMU: // IMU
+    case WIMU::MODULE_IMU: // IMU
         icon_path = ":/icons/images/IMU";
         break;
     default:
@@ -143,25 +137,25 @@ QIcon WIMUConfigDialog::getIconForComponent(int index, bool enabled){
 
 QCheckBox* WIMUConfigDialog::getActiveChkBox(int index){
     switch (index){
-    case WIMUConfig::MODULE_ACC: // Accelero
+    case WIMU::MODULE_ACC: // Accelero
         return ui->chkAcc;
         break;
-    case WIMUConfig::MODULE_GYRO: // Gyro
+    case WIMU::MODULE_GYRO: // Gyro
         return ui->chkGyro;
         break;
-    case WIMUConfig::MODULE_MAGNETO: // Magneto
+    case WIMU::MODULE_MAGNETO: // Magneto
         return ui->chkMag;
         break;
-    case WIMUConfig::MODULE_GPS: // GPS
+    case WIMU::MODULE_GPS: // GPS
         return ui->chkGPS;
         break;
-    case WIMUConfig::MODULE_DATALOGGER: // Logger
+    case WIMU::MODULE_DATALOGGER: // Logger
         return ui->chkLogger;
         break;
-    case WIMUConfig::MODULE_BLE: // BLE
+    case WIMU::MODULE_BLE: // BLE
         return ui->chkBLE;
         break;
-    case WIMUConfig::MODULE_IMU: // IMU
+    case WIMU::MODULE_IMU: // IMU
         return ui->chkIMU;
         break;
     default:
@@ -252,13 +246,19 @@ void WIMUConfigDialog::connectButtonsSignals(){
     connect(ui->btnSyncTime,SIGNAL(clicked(bool)),this,SLOT(buttonSyncTimeClicked()));
 }
 
-void WIMUConfigDialog::connectSerialPortSignals(){
-    if (m_serialPort){
-        connect(m_serialPort,SIGNAL(aboutToClose()),this,SLOT(serialPortAboutToClose()));
-        connect(m_serialPort,SIGNAL(readyRead()), this, SLOT(serialPortDataReady()));
-        connect(m_serialPort,SIGNAL(bytesWritten(qint64)),this,SLOT(serialPortBytesWritten(qint64)));
-        connect(m_serialPort,SIGNAL(error(QSerialPort::SerialPortError)),this, SLOT(serialPortError(QSerialPort::SerialPortError)));
-    }
+void WIMUConfigDialog::connectWIMUSignals(){
+
+    connect(&m_wimuDriver,SIGNAL(comAboutToClose()),this,SLOT(wimuPortAboutToClose()));
+    connect(&m_wimuDriver,SIGNAL(comError(QSerialPort::SerialPortError)),this,SLOT(wimuPortError(QSerialPort::SerialPortError)));
+
+    connect(&m_wimuDriver,SIGNAL(cmdError(WIMUUSBDriver::WIMUCommandID)),this,SLOT(wimuCmdError(WIMUUSBDriver::WIMUCommandID)), Qt::QueuedConnection);
+    connect(&m_wimuDriver,SIGNAL(cmdOK(WIMUUSBDriver::WIMUCommandID)),this,SLOT(wimuCmdOK(WIMUUSBDriver::WIMUCommandID)), Qt::QueuedConnection);
+    connect(&m_wimuDriver,SIGNAL(cmdReply(QString,WIMUUSBDriver::WIMUCommandID)),this,SLOT(wimuCmdReply(QString,WIMUUSBDriver::WIMUCommandID)), Qt::QueuedConnection);
+    connect(&m_wimuDriver,SIGNAL(configReceived(WIMUConfig)),this,SLOT(wimuConfigReceived(WIMUConfig)), Qt::QueuedConnection);
+    connect(&m_wimuDriver,SIGNAL(settingsReceived(WIMUSettings)),this,SLOT(wimuSettingsReceived(WIMUSettings)), Qt::QueuedConnection);
+    connect(&m_wimuDriver,SIGNAL(timeReceived(QDateTime)),this,SLOT(wimuTimeReceived(QDateTime)), Qt::QueuedConnection);
+
+
 }
 
 void WIMUConfigDialog::connectGeneralUISignals(){
@@ -331,10 +331,10 @@ void WIMUConfigDialog::buttonConsoleSendClicked(){
     if (!ui->btnConsoleSend->isEnabled()) return;
 
     ui->btnConsoleSend->setFocus();
-    if (!m_serialPort || ui->txtConsoleCmd->text().isEmpty())
-        return; // No port = no sending!
+    if (ui->txtConsoleCmd->text().isEmpty())
+        return; // No cmd = no sending!
 
-    wimuSendCommand(ui->txtConsoleCmd->text());
+    sendCommandToWIMU(ui->txtConsoleCmd->text(), WIMUUSBDriver::WimuCmdOther);
 
     // Clear text zone
     ui->txtConsoleCmd->clear();
@@ -342,8 +342,7 @@ void WIMUConfigDialog::buttonConsoleSendClicked(){
 }
 
 void WIMUConfigDialog::buttonReadConfigClicked(){
-    if (m_serialPort)
-        wimuSendCommand("getconf");
+    sendCommandToWIMU("getconf", WIMUUSBDriver::WimuCmdGetConf);
 }
 
 void WIMUConfigDialog::buttonWriteSettingsClicked(){
@@ -355,9 +354,7 @@ void WIMUConfigDialog::buttonWriteSettingsClicked(){
     data.insert(0,QString("setset"));
     data.append("\n\r");
 
-    m_lastSerialCmd = "setset";
-
-    wimuSendData(data);
+    sendDataToWIMU(data, WIMUUSBDriver::WimuCmdSetSet);
 
 }
 
@@ -370,9 +367,7 @@ void WIMUConfigDialog::buttonWriteConfigClicked(){
     data.insert(0,QString("setconf"));
     data.append("\n\r");
 
-    m_lastSerialCmd = "setconf";
-
-    wimuSendData(data);
+    sendDataToWIMU(data, WIMUUSBDriver::WimuCmdSetConf);
 
 }
 
@@ -380,20 +375,15 @@ void WIMUConfigDialog::buttonResetClicked(){
     QMessageBox::StandardButton conf = QMessageBox::question(this,"Redémarrage?","Si le module est redémarré, la connexion avec celui-ci sera perdue.\nDésirez-vous vraiment poursuivre?");
 
     if (conf == QMessageBox::Yes){
-        wimuSendCommand("reboot");
-
-        m_serialPort->waitForBytesWritten(-1);
-        buttonConnectClicked(); // Disconnect
+        m_wimuDriver.wimuReboot();
+        m_wimuDriver.wimuDisconnect(); // Disconnect
     }
 }
 
 void WIMUConfigDialog::buttonSyncTimeClicked(){
-    QDateTime local_date = QDateTime::currentDateTime();
-    QString datestr = QString::number(QDateTime::currentDateTime().toTime_t()+local_date.offsetFromUtc());
+   m_wimuDateTime = QDateTime();
 
-    m_wimuDateTime = QDateTime();
-
-    wimuSendCommand("timeset " + datestr);
+   m_wimuDriver.wimuSyncTime();
 }
 
 void WIMUConfigDialog::addToConsole(QString text, bool sent){
@@ -468,32 +458,32 @@ void WIMUConfigDialog::loadFromConfig(WIMUConfig* config){
     }
 
     // Accelero
-    ui->chkAcc->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_ACC));
-    if (config->isModuleEnabled(WIMUConfig::MODULE_ACC))
+    ui->chkAcc->setChecked(config->isModuleEnabled(WIMU::MODULE_ACC));
+    if (config->isModuleEnabled(WIMU::MODULE_ACC))
         ui->lstComponents->item(0)->setCheckState(Qt::Checked);
     else
         ui->lstComponents->item(0)->setCheckState(Qt::Unchecked);
     ui->cmbAccRange->setCurrentIndex(config->acc.range);
 
     // Gyro
-    ui->chkGyro->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_GYRO));
-        if (config->isModuleEnabled(WIMUConfig::MODULE_GYRO))
+    ui->chkGyro->setChecked(config->isModuleEnabled(WIMU::MODULE_GYRO));
+        if (config->isModuleEnabled(WIMU::MODULE_GYRO))
             ui->lstComponents->item(1)->setCheckState(Qt::Checked);
         else
             ui->lstComponents->item(1)->setCheckState(Qt::Unchecked);
     ui->cmbGyroRange->setCurrentIndex(config->gyro.range);
 
     // Magneto
-    ui->chkMag->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_MAGNETO));
-    if (config->isModuleEnabled(WIMUConfig::MODULE_MAGNETO))
+    ui->chkMag->setChecked(config->isModuleEnabled(WIMU::MODULE_MAGNETO));
+    if (config->isModuleEnabled(WIMU::MODULE_MAGNETO))
         ui->lstComponents->item(2)->setCheckState(Qt::Checked);
     else
         ui->lstComponents->item(2)->setCheckState(Qt::Unchecked);
     ui->cmbMagRange->setCurrentIndex(config->magneto.range);
 
     // GPS
-    ui->chkGPS->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_GPS));
-    if (config->isModuleEnabled(WIMUConfig::MODULE_GPS))
+    ui->chkGPS->setChecked(config->isModuleEnabled(WIMU::MODULE_GPS));
+    if (config->isModuleEnabled(WIMU::MODULE_GPS))
         ui->lstComponents->item(3)->setCheckState(Qt::Checked);
     else
         ui->lstComponents->item(3)->setCheckState(Qt::Unchecked);
@@ -502,8 +492,8 @@ void WIMUConfigDialog::loadFromConfig(WIMUConfig* config){
     ui->chkGPSAutoWake->setChecked(config->gps.enable_scan_when_charged);
 
     // Logger
-    ui->chkLogger->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_DATALOGGER));
-    if (config->isModuleEnabled(WIMUConfig::MODULE_DATALOGGER))
+    ui->chkLogger->setChecked(config->isModuleEnabled(WIMU::MODULE_DATALOGGER));
+    if (config->isModuleEnabled(WIMU::MODULE_DATALOGGER))
         ui->lstComponents->item(4)->setCheckState(Qt::Checked);
     else
         ui->lstComponents->item(4)->setCheckState(Qt::Unchecked);
@@ -511,16 +501,16 @@ void WIMUConfigDialog::loadFromConfig(WIMUConfig* config){
     ui->spinLoggerFileNum->setValue(config->logger.max_files_in_folder);
 
     // BLE
-    ui->chkBLE->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_BLE));
-    if (config->isModuleEnabled(WIMUConfig::MODULE_BLE))
+    ui->chkBLE->setChecked(config->isModuleEnabled(WIMU::MODULE_BLE));
+    if (config->isModuleEnabled(WIMU::MODULE_BLE))
         ui->lstComponents->item(5)->setCheckState(Qt::Checked);
     else
         ui->lstComponents->item(5)->setCheckState(Qt::Unchecked);
     ui->chkBLEControl->setChecked(config->ble.enable_control);
 
     // IMU
-    ui->chkIMU->setChecked(config->isModuleEnabled(WIMUConfig::MODULE_IMU));
-    if (config->isModuleEnabled(WIMUConfig::MODULE_IMU))
+    ui->chkIMU->setChecked(config->isModuleEnabled(WIMU::MODULE_IMU));
+    if (config->isModuleEnabled(WIMU::MODULE_IMU))
         ui->lstComponents->item(6)->setCheckState(Qt::Checked);
     else
         ui->lstComponents->item(6)->setCheckState(Qt::Unchecked);
@@ -602,34 +592,34 @@ void WIMUConfigDialog::saveToConfig(WIMUConfig* config){
     config->general.sampling_rate = ui->cmbOptionsSampling->currentText().toInt();
 
     // Accelero
-    config->enableModule(WIMUConfig::MODULE_ACC,ui->chkAcc->isChecked());
+    config->enableModule(WIMU::MODULE_ACC,ui->chkAcc->isChecked());
     config->acc.range = ui->cmbAccRange->currentIndex();
 
     // Gyro
-    config->enableModule(WIMUConfig::MODULE_GYRO,ui->chkGyro->isChecked());
+    config->enableModule(WIMU::MODULE_GYRO,ui->chkGyro->isChecked());
     config->gyro.range = ui->cmbGyroRange->currentIndex();
 
     // Magneto
-    config->enableModule(WIMUConfig::MODULE_MAGNETO,ui->chkMag->isChecked());
+    config->enableModule(WIMU::MODULE_MAGNETO,ui->chkMag->isChecked());
     config->magneto.range = ui->cmbMagRange->currentIndex();
 
     // GPS
-    config->enableModule(WIMUConfig::MODULE_GPS,ui->chkGPS->isChecked());
+    config->enableModule(WIMU::MODULE_GPS,ui->chkGPS->isChecked());
     config->gps.force_cold = ui->chkGPSColdStart->isChecked();
     config->gps.interval = ui->spinGPSSampling->value();
     config->gps.enable_scan_when_charged = ui->chkGPSAutoWake->isChecked();
 
     // Logger
-    config->enableModule(WIMUConfig::MODULE_DATALOGGER,ui->chkLogger->isChecked());
+    config->enableModule(WIMU::MODULE_DATALOGGER,ui->chkLogger->isChecked());
     config->logger.split_by_day = ui->chkLoggerSplit->isChecked();
     config->logger.max_files_in_folder = ui->spinLoggerFileNum->value();
 
     // BLE
-    config->enableModule(WIMUConfig::MODULE_BLE,ui->chkBLE->isChecked());
+    config->enableModule(WIMU::MODULE_BLE,ui->chkBLE->isChecked());
     config->ble.enable_control = ui->chkBLEControl->isChecked();
 
     // IMU
-    config->enableModule(WIMUConfig::MODULE_IMU,ui->chkIMU->isChecked());
+    config->enableModule(WIMU::MODULE_IMU,ui->chkIMU->isChecked());
     config->imu.auto_calib_gyro = ui->chkIMUAutoCalib->isChecked();
     config->imu.disable_magneto = ui->chkIMUNoMag->isChecked();
     config->imu.beta = ui->txtIMUBeta->text().toFloat();
@@ -638,53 +628,34 @@ void WIMUConfigDialog::saveToConfig(WIMUConfig* config){
 
 void WIMUConfigDialog::buttonConnectClicked(){
 
-    // Delete previous serial port
-    if (m_serialPort){
-        if (m_serialPort->isOpen())
-            m_serialPort->close();
-        m_serialPort->deleteLater();
-        m_serialPort=NULL;
-    }
-
-    m_serialBuffer.clear();
+    bool status = false;
 
     if (ui->btnConnect->isChecked()){ // Was just checked, so trying to connect...
-        QList<QSerialPortInfo> serial_list = QSerialPortInfo::availablePorts();
+        status = m_wimuDriver.wimuFindAndPrepare();
 
-        for (int i=0; i<serial_list.count(); i++){
-            if (serial_list.at(i).description().contains("STMicroelectronics", Qt::CaseInsensitive) ||
-                serial_list.at(i).description().contains("WIMU", Qt::CaseInsensitive)){
-                // WIMU found
-                m_serialPort = new QSerialPort(serial_list.at(i));
-                break;
-            }
-        }
-
-        if (m_serialPort==NULL){
+        if (!status){
             // No WIMU
             ui->lblStatus->setText(tr("Aucun WIMU n'a été détecté. Vérifiez qu'il est bien branché et dans le bon mode."));
             ui->lblStatus->setStyleSheet("QLabel{color:red;}");
             ui->btnConnect->setChecked(false);
             return;
         }else{
-            ui->lblStatus->setText(tr("Connexion en cours...") + m_serialPort->portName());
+            ui->lblStatus->setText(tr("Connexion en cours...") + m_wimuDriver.comGetPortName());
             ui->lblStatus->setStyleSheet("QLabel{color:black;}");
-            m_serialPort->setBaudRate(115200);
         }
 
-        if (m_serialPort->open(QSerialPort::ReadWrite)){
-            ui->lblStatus->setText(tr("Connexion établie - ") + m_serialPort->portName());
+        status = m_wimuDriver.wimuConnect();
+
+        if (status){
+            ui->lblStatus->setText(tr("Connexion établie - ") + m_wimuDriver.comGetPortName());
             ui->lblStatus->setStyleSheet("QLabel{color:blue;}");
             ui->btnConnect->setText(tr("Déconnecter"));
         }else{
-            ui->lblStatus->setText(tr("Impossible de se connecter: ") +  m_serialPort->errorString());
+            ui->lblStatus->setText(tr("Impossible de se connecter: ") + m_wimuDriver.comGetErrorString());
             ui->lblStatus->setStyleSheet("QLabel{color:red;}");
             ui->btnConnect->setChecked(false);
             return;
         }
-
-        // Connect signals
-        connectSerialPortSignals();
 
         // Show frame
         ui->frameConnected->setVisible(true);
@@ -692,55 +663,34 @@ void WIMUConfigDialog::buttonConnectClicked(){
         ui->lblWIMUNotConnected->setVisible(false);
 
         // Request settings
-        wimuSendCommand("getset");
+        //wimuSendCommand("getset");
+        sendCommandToWIMU("getset", WIMUUSBDriver::WimuCmdGetSet, true);
 
     }else{ // Was unchecked, so disconnect
-       // Handled in the about to close slot
-
+       m_wimuDriver.wimuDisconnect();
 
     }
 }
 
-void WIMUConfigDialog::wimuSendCommand(QString cmd){
-    if (!m_serialPort)
-        return;
+void WIMUConfigDialog::sendCommandToWIMU(QString cmd, WIMUUSBDriver::WIMUCommandID cmd_id, bool hidden){
 
-    // Clean the string
-    QString tosend = cmd;
-
-    // Remove all exit codes
-    tosend = tosend.replace('\n',"");
-    tosend = tosend.replace('\r',"");
-
-    // Append return
-    tosend.append('\n');
-    tosend.append('\r');
-
-    // Save last command
-    m_lastSerialCmd = tosend;
-
-    // Send to serial port
-    m_serialPort->write(tosend.toUtf8());
+    m_wimuDriver.wimuSendCommand(cmd, cmd_id);
 
     // Update Console Text
-    addToConsole(tosend, true);
+    if (!hidden)
+        addToConsole(cmd, true);
 
     // Disable command area until reply is received
-    ui->btnConsoleSend->setEnabled(false);
-    ui->txtConsoleCmd->setEnabled(false);
+    enableCommandArea(false);
+}
+
+void WIMUConfigDialog::sendDataToWIMU(QByteArray data, WIMUUSBDriver::WIMUCommandID cmd_id){
+
+    m_wimuDriver.wimuSendData(data, cmd_id);
 
 }
 
-void WIMUConfigDialog::wimuSendData(QByteArray data){
-    if (!m_serialPort)
-        return;
-
-    m_serialPort->write(data);
-
-}
-
-void WIMUConfigDialog::serialPortAboutToClose(){
-    //qDebug() << "Serial Port about to close...";
+void WIMUConfigDialog::wimuPortAboutToClose(){
     ui->btnConnect->setText(tr("Connecter"));
     ui->lblStatus->setText(tr("Aucune connexion établie"));
     ui->lblStatus->setStyleSheet("QLabel{color:black;}");
@@ -751,159 +701,10 @@ void WIMUConfigDialog::serialPortAboutToClose(){
     WIMUSettings settings;
     loadFromSettings(&settings);
     ui->wdgPanels->setCurrentWidget(ui->pgEmpty);
-    m_wimuDateTime.setDate(QDate());
-    m_wimuDateTime.setTime(QTime());
+    m_wimuDateTime = QDateTime();
 }
-
-void WIMUConfigDialog::serialPortDataReady(){
-    m_serialBuffer.append(m_serialPort->readAll());
-
-    //////////////////
-    // Special cases when expecting binary reply
-    if (m_lastSerialCmd.left(7)=="getconf"){
-        // Check if we have received everything yet
-        if (m_serialBuffer.count()<WIMUConfig::size() + m_lastSerialCmd.count())
-            return;
-
-        // Load data
-        WIMUConfig config;
-
-        while( !(m_serialBuffer.at(0) == char(0xEA) && m_serialBuffer.at(1) == char(0xEA)) &&
-              m_serialBuffer.count()>=2){ // Sync on sync byte
-            m_serialBuffer.remove(0,1);
-        }
-        // Remove 2 sync bytes
-        m_serialBuffer.remove(0,2);
-
-        // Check module ID byte and remove it
-        if (m_serialBuffer.at(0)!=0){
-            QMessageBox::warning(this,"Erreur Lecture Config","La configuration reçue n'est pas bien formattée!");
-
-        }else{
-            m_serialBuffer.remove(0,1); // remove module ID
-
-            // Check length
-            if (m_serialBuffer.at(0) != WIMUConfig::size()){
-                QMessageBox::warning(this,"Erreur Lecture Config","La configuration reçue n'a pas la bonne taille!");
-            }else{
-                m_serialBuffer.remove(0,1); // remove length
-                config.unserialize(&m_serialBuffer);
-
-                // TODO: Checksum
-                loadFromConfig(&config);
-            }
-        }
-    }
-
-    if (m_lastSerialCmd.left(6)=="getset"){
-        // Check if we have received everything yet
-        if (m_serialBuffer.count()<WIMUSettings::size())
-            return;
-
-        // Load data
-        WIMUSettings settings;
-
-        while( !(m_serialBuffer.at(0) == char(0xEA) && m_serialBuffer.at(1) == char(0xEA)) &&
-              m_serialBuffer.count()>=2){ // Sync on sync byte
-            m_serialBuffer.remove(0,1);
-        }
-        // Remove 2 sync bytes
-        m_serialBuffer.remove(0,2);
-
-        // Check module ID byte and remove it
-        if (m_serialBuffer.at(0)!=0){
-            QMessageBox::warning(this,"Erreur Lecture Paramètres","La configuration reçue n'est pas bien formattée!");
-
-        }else{
-            m_serialBuffer.remove(0,1); // remove module ID
-
-            // Check length
-            if (m_serialBuffer.at(0) != WIMUSettings::size()){
-                QMessageBox::warning(this,"Erreur Lecture Paramètres","La configuration reçue n'a pas la bonne taille!");
-            }else{
-                m_serialBuffer.remove(0,1); // remove length
-                settings.unserialize(&m_serialBuffer);
-
-                // TODO: Checksum
-                loadFromSettings(&settings);
-
-            }
-        }
-
-    }
-    if (m_lastSerialCmd=="setset"){
-         if (m_serialBuffer.count() > WIMUSettings::size()+6+4 && m_serialBuffer.endsWith('\r')){ // sizeof (setset) + \n\r\n\r
-            // Remove last 2 characters (\n\r)
-            m_serialBuffer.remove(m_serialBuffer.count()-2,2);
-
-            if (m_serialBuffer.at(m_serialBuffer.count()-1)=='K'){ // OK
-                // All is well
-                QMessageBox::information(this,"Mise à jour Paramètres","Les paramètres ont bien été mis à jour!");
-            }else{
-                // Error
-                QMessageBox::warning(this,"Mise à jour Paramètres","Les paramètres n'ont pas pu être mis à jour...");
-            }
-            m_serialBuffer.clear();
-        }else{
-             return;
-         }
-    }
-
-    if (m_lastSerialCmd=="setconf"){
-         if (m_serialBuffer.count() > WIMUConfig::size()+7+4/* && m_serialBuffer.endsWith('\r') && m_serialBuffer.at(m_serialBuffer.count()-2)=='\n'*/){ // sizeof (setset) + \n\r\n\r
-            // Remove last 2 characters (\n\r)
-            //m_serialBuffer.remove(m_serialBuffer.count()-2,2);
-
-            if (m_serialBuffer.contains("OK")){ // OK
-                // All is well
-                QMessageBox::information(this,"Mise à jour Configuration","La configuration a bien été mise à jour!\nLe module doit être redémarré pour que celle-ci prenne effet...");
-
-                m_serialBuffer.clear();
-                buttonResetClicked();
-            }else{
-                if (m_serialBuffer.contains("ERROR")){
-                    // Error
-                    QMessageBox::warning(this,"Mise à jour Configuration","La configuration n'a pas pu être mise à jour...");
-                    m_serialBuffer.clear();
-                }
-                else{
-                    return;
-                }
-            }
-         }else{
-             return;
-         }
-    }
-
-
-    if (m_lastSerialCmd.left(6)=="time\n\r"){
-
-        if (m_serialBuffer.count() < m_lastSerialCmd.count()){
-            return; // Wait for more
-        }
-
-        // Update module time
-        if (m_serialBuffer.count()> m_lastSerialCmd.count() && m_serialBuffer.endsWith('\r')){
-            m_serialBuffer.remove(0, m_lastSerialCmd.count());
-            m_serialBuffer.remove(m_serialBuffer.count()-2,2);
-
-            QString datetime(m_serialBuffer);
-            m_wimuDateTime = QDateTime::fromTime_t(datetime.toULong(), Qt::UTC);
-        }else
-            return; // Wait for even more!
-    }else{
-        ////////////////
-        if (!m_lastSerialCmd.isEmpty()){
-            // Module will echo back characters - ignore characters from the command
-            if (m_serialBuffer.count() < m_lastSerialCmd.count()){
-                // Wait for more...
-                return;
-            }
-            // Remove those bytes from the list
-            m_serialBuffer.remove(0, m_lastSerialCmd.count());
-        }
-    }
-
+/*
+void WIMUConfigDialog::wimuPortDataReady(){
 
     QString s_data(m_serialBuffer);
     s_data.replace('\n',"");
@@ -918,18 +719,14 @@ void WIMUConfigDialog::serialPortDataReady(){
         ui->btnConsoleSend->setEnabled(true);
         ui->txtConsoleCmd->setEnabled(true);
         ui->txtConsoleCmd->setFocus();
-        m_lastSerialCmd.clear();
     }
-    m_serialBuffer.clear();
-}
 
-void WIMUConfigDialog::serialPortBytesWritten(qint64 bytes){
-    Q_UNUSED(bytes)
-}
+}*/
 
-void WIMUConfigDialog::serialPortError(QSerialPort::SerialPortError error){
+
+void WIMUConfigDialog::wimuPortError(QSerialPort::SerialPortError error){
     Q_UNUSED(error)
-    QMessageBox::warning(this,"Erreur COM", "Une erreur est survenue dans la communication: \n" + m_serialPort->errorString());
+    QMessageBox::warning(this,"Erreur COM", "Une erreur est survenue dans la communication: \n" + m_wimuDriver.comGetErrorString());
 }
 
 void WIMUConfigDialog::clockUpdate(){
@@ -937,15 +734,9 @@ void WIMUConfigDialog::clockUpdate(){
     ui->lblCurrentDateTime->setText("<b>Heure actuelle</b>: " + localtime.toString("dd MMMM yyyy - hh:mm:ss"));
 
     if (!m_wimuDateTime.isValid()){
-        if (m_serialPort){
-            // Query for time
-            if (m_lastSerialCmd.isEmpty() && m_serialBuffer.isEmpty())
-                wimuSendCommand("time");
-        }else{
-            ui->lblCurrentDateTimeWIMU->setText("<b>Heure du module<b>: Inconnue");
-        }
+        ui->lblCurrentDateTimeWIMU->setText("<b>Heure du module</b>: Inconnue");
+        m_wimuDriver.wimuGetTime();
         return;
-
     }
 
     m_wimuDateTime = m_wimuDateTime.addSecs(1);
@@ -957,4 +748,72 @@ void WIMUConfigDialog::clockUpdate(){
     }
 
     ui->lblCurrentDateTimeWIMU->setText("<b>Heure du module</b>: <font color=" + color +">" + m_wimuDateTime.toString("dd MMMM yyyy - hh:mm:ss") + "</font>");
+}
+
+void WIMUConfigDialog::wimuConfigReceived(WIMUConfig config){
+    loadFromConfig(&config);
+    enableCommandArea(true);
+}
+
+void WIMUConfigDialog::wimuSettingsReceived(WIMUSettings settings){
+    loadFromSettings(&settings);
+    enableCommandArea(true);
+}
+
+void WIMUConfigDialog::wimuTimeReceived(QDateTime module_time){
+    m_wimuDateTime = module_time;
+    enableCommandArea(true);
+}
+
+void WIMUConfigDialog::wimuCmdOK(WIMUUSBDriver::WIMUCommandID cmd){
+    //qDebug() << cmd << " = OK!";
+    switch (cmd){
+    case WIMUUSBDriver::WimuCmdSetConf:
+        QMessageBox::information(this, "Configuration", "La configuration du module a bien été mise à jour.\nLe module doit être redémarré pour que celle-ci soit appliquée.");
+        buttonResetClicked();
+        break;
+    case WIMUUSBDriver::WimuCmdSetSet:
+        QMessageBox::information(this, "Paramètres", "Les paramètres du module ont bien été mis à jour.");
+        break;
+    default:
+        addToConsole("OK",false);
+        break;
+    }
+
+    enableCommandArea(true);
+}
+
+void WIMUConfigDialog::wimuCmdError(WIMUUSBDriver::WIMUCommandID cmd){
+    //qDebug() << cmd << " = Error!";
+
+    switch (cmd){
+    case WIMUUSBDriver::WimuCmdSetConf:
+        QMessageBox::warning(this, "Configuration", "La configuration du module n'a pas été mise à jour...");
+        break;
+    case WIMUUSBDriver::WimuCmdSetSet:
+        QMessageBox::information(this, "Paramètres", "Les paramètres du module n'ont pas été mis à jour...");
+        break;
+    default:
+        addToConsole("ERROR",false);
+        break;
+    }
+
+    enableCommandArea(true);
+}
+
+void WIMUConfigDialog::wimuCmdReply(QString reply, WIMUUSBDriver::WIMUCommandID cmd){
+    //qDebug() << cmd << " = " << reply;
+    Q_UNUSED(cmd);
+
+    addToConsole(reply,false);
+    enableCommandArea(true);
+}
+
+void WIMUConfigDialog::enableCommandArea(bool enable){
+
+    ui->btnConsoleSend->setEnabled(enable);
+    ui->txtConsoleCmd->setEnabled(enable);
+    if (enable)
+        ui->txtConsoleCmd->setFocus();
+
 }

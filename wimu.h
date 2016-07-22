@@ -1,0 +1,76 @@
+#ifndef WIMU_H
+#define WIMU_H
+
+#include <QDateTime>
+
+namespace WIMU{
+    typedef enum{
+      MODULE_CPU=0,
+      MODULE_BLE=1,
+      MODULE_GPS=2,
+      MODULE_GYRO=3,
+      MODULE_MAGNETO=4,
+      MODULE_ACC=5,
+      MODULE_DATALOGGER=6,
+      MODULE_USB=7,
+      MODULE_POWER=8,
+      MODULE_IMU=9,
+      MODULE_INTERNAL_NUM //Total number of internal modules
+    } Modules_ID;
+
+    // IMU
+    typedef struct{
+        quint16  frame_num;
+        qint16   acc_data[3];
+        qint16   gyro_data[3];
+        qint16   mag_data[3];
+        float     quaternion[4];
+    }IMUFrame_Struct;
+
+
+    // GPS
+    typedef enum{
+        GPSNAV_NOFIX= 0,
+        GPSNAV_1SV  = 1,
+        GPSNAV_2SV  = 2,
+        GPSNAV_3SV  = 3,
+        GPSNAV_4SV  = 4,
+        GPSNAV_2DLS = 5,
+        GPSNAV_3DLS = 6,
+        GPSNAV_DR   = 7
+    } GPSNavType;
+
+
+    typedef struct{
+        bool                nav_valid;
+        GPSNavType          nav_type;
+        bool                trickle_power;
+        bool                dop_limits;
+        bool                dgps_corrected;
+        bool                overdetermined;
+        bool                invalid_speed;
+        QDateTime           nav_datetime;
+        quint32             nav_sat_ids;
+        float               latitude;
+        float               longitude;
+        float               altitude;
+        float               speed;
+        float               orientation; // Degrees clock wise from true north
+        float               climb_rate;
+        float               horizontal_precision;
+        float               vertical_precision;
+        float               time_error;
+        quint8              satellite_numbers;
+        float               hdop;
+    }GPSNavData_Struct;
+
+    typedef struct{
+        quint8                      nb_channels;
+        QList<quint8>               sat_ids;
+        QList< QVector <quint8> >   signal_ratios;
+        QList<quint16>              sat_states;
+
+    }GPSTrackerData_Struct;
+}
+
+#endif // WIMU_H

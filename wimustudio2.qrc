@@ -32,5 +32,14 @@
         <file>images/reset.png</file>
         <file>images/console.png</file>
         <file>images/tools.png</file>
+        <file>images/graph.png</file>
+        <file>images/led_blue.png</file>
+        <file>images/led_green.png</file>
+        <file>images/led_red.png</file>
+        <file>images/led_yellow.png</file>
+        <file>images/led_white.png</file>
+    </qresource>
+    <qresource prefix="/3d">
+        <file>images/WIMU3D.obj</file>
     </qresource>
 </RCC>

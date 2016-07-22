@@ -10,6 +10,7 @@
 
 #include "wimuconfig.h"
 #include "wimusettings.h"
+#include "wimu_usb_driver.h"
 
 
 namespace Ui {
@@ -26,13 +27,11 @@ public:
 
 private:
     Ui::WIMUConfigDialog    *ui;
-    QSerialPort*             m_serialPort;
+    //USBReader*              m_serialPort;
+    WIMUUSBDriver            m_wimuDriver;
 
     QIcon       getIconForComponent(int index, bool enabled);
     QCheckBox*  getActiveChkBox(int index);
-
-    QString     m_lastSerialCmd;
-    QByteArray  m_serialBuffer;
 
     QTimer      m_clock;
     QDateTime   m_wimuDateTime;
@@ -40,7 +39,7 @@ private:
     void initUIState();
     void connectCheckBoxSignals();
     void connectButtonsSignals();
-    void connectSerialPortSignals();
+    void connectWIMUSignals();
     void connectGeneralUISignals();
 
     void loadFromConfig(WIMUConfig* config);
@@ -49,10 +48,10 @@ private:
     void saveToSettings(WIMUSettings* settings);
 
     void addToConsole(QString text, bool sent);
+    void enableCommandArea(bool enable);
 
-    void wimuSendCommand(QString cmd);
-    void wimuSendData(QByteArray data);
-
+    void sendCommandToWIMU(QString cmd, WIMUUSBDriver::WIMUCommandID cmd_id, bool hidden = false);
+    void sendDataToWIMU(QByteArray data, WIMUUSBDriver::WIMUCommandID cmd_id);
 
 private slots:
     void configSectionChanged(int newIndex);
@@ -75,10 +74,14 @@ private slots:
     void buttonResetClicked();
     void buttonSyncTimeClicked();
 
-    void serialPortAboutToClose();
-    void serialPortDataReady();
-    void serialPortBytesWritten(qint64 bytes);
-    void serialPortError(QSerialPort::SerialPortError error);
+    void wimuPortAboutToClose();
+    void wimuPortError(QSerialPort::SerialPortError error);
+    void wimuConfigReceived(WIMUConfig config);
+    void wimuSettingsReceived(WIMUSettings settings);
+    void wimuTimeReceived(QDateTime module_time);
+    void wimuCmdOK(WIMUUSBDriver::WIMUCommandID cmd);
+    void wimuCmdError(WIMUUSBDriver::WIMUCommandID cmd);
+    void wimuCmdReply(QString reply, WIMUUSBDriver::WIMUCommandID cmd);
 
     void clockUpdate();
 

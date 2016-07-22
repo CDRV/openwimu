@@ -4,7 +4,15 @@
 
 WIMUConfig::WIMUConfig(QObject *parent) : QObject(parent)
 {
+    qRegisterMetaType<WIMUConfig>("WIMUConfig");
+
     setDefaults();
+}
+
+WIMUConfig::WIMUConfig(const WIMUConfig &copy, QObject *parent) :
+       QObject(parent)
+{
+    *this = copy;
 }
 
 void WIMUConfig::setDefaults(){
@@ -12,11 +20,11 @@ void WIMUConfig::setDefaults(){
     crc = 0;
 
     // Enabled Modules
-    for (int i=0; i<MODULE_INTERNAL_NUM; i++){
-        if (i== MODULE_GPS || i == MODULE_BLE){
-            enableModule((Modules_ID)i,false);
+    for (int i=0; i<WIMU::MODULE_INTERNAL_NUM; i++){
+        if (i== WIMU::MODULE_GPS || i == WIMU::MODULE_BLE){
+            enableModule((WIMU::Modules_ID)i,false);
         }else{
-            enableModule((Modules_ID)i,true);
+            enableModule((WIMU::Modules_ID)i,true);
         }
     }
 
@@ -69,7 +77,7 @@ void WIMUConfig::setDefaults(){
     imu.disable_magneto = false;
 }
 
-void WIMUConfig::enableModule(Modules_ID module, bool enable){
+void WIMUConfig::enableModule(WIMU::Modules_ID module, bool enable){
     if (enable){
         enabled_modules |= (1 << module);
     }else{
@@ -77,7 +85,7 @@ void WIMUConfig::enableModule(Modules_ID module, bool enable){
     }
 }
 
-bool WIMUConfig::isModuleEnabled(Modules_ID module){
+bool WIMUConfig::isModuleEnabled(WIMU::Modules_ID module){
     return (enabled_modules & (1 << module))>0;
 }
 
@@ -117,29 +125,122 @@ bool WIMUConfig::loadFromFile(QString filename){
 }
 
 quint16 WIMUConfig::size(){
-    quint16 size=0;
+    quint16 size=2;
 
-    size += sizeof(enabled_modules);
-    size += sizeof(datetime);
-    size += sizeof(ui);
-    size += sizeof(general);
-    size += sizeof(logger);
-    size += sizeof(gps);
-    size += sizeof(power);
-    size += sizeof(ble);
-    size += sizeof(acc);
-    size += sizeof(gyro);
-    size += sizeof(magneto);
-    size += sizeof(imu);
-    size += sizeof(crc);
+    // sizeof doesn't seem to work with VC compiler... so ugly stuff here!
+
+    //size += sizeof(enabled_modules);
+    size += sizeof(quint16);
+    //size += sizeof(datetime);
+    size += sizeof(quint8) + sizeof(bool)*2;
+    //size += sizeof(ui);
+    size += sizeof(quint8) + sizeof(bool)*4;
+    //size += sizeof(general);
+    size += sizeof(quint8) + sizeof(bool);
+    //size += sizeof(logger);
+    size += sizeof(quint8) + sizeof(bool);
+    //size += sizeof(gps);
+    size += sizeof(quint8) + sizeof(bool)*2;
+    //size += sizeof(power);
+    size += sizeof(bool)*3;
+    //size += sizeof(ble);
+    size += sizeof(bool);
+    //size += sizeof(acc);
+    size += sizeof(quint8);
+    //size += sizeof(gyro);
+    size += sizeof(quint8);
+    //size += sizeof(magneto);
+    size += sizeof(quint8);
+    //size += sizeof(imu);
+    size += sizeof(float) + sizeof(bool)*2;
+    //size += sizeof(crc);
+    size+= sizeof(qint32);
 
     return size;
+}
+
+float WIMUConfig::convertAcc2g(qint16 &value){
+    float rval;
+    quint8 range_val = getAccRangeValue();
+
+    // TODO: Adjust according to resolution on a different wimu version, if needed
+    rval = ((float)value / 32767.f) * range_val;
+
+    return rval;
+}
+
+float WIMUConfig::convertGyro2degs(qint16 &value){
+    float rval;
+
+    quint16 range_val = getGyroRangeValue();
+
+    // TODO: Adjust according to resolution on a different wimu version, if needed
+    rval = ((float)value / 32767.f) * range_val;
+
+    return rval;
+}
+
+float WIMUConfig::convertMag2gauss(qint16 &value){
+    float rval;
+
+    float range_val = getMagRangeValue();
+
+    // TODO: Adjust according to resolution on a different wimu version, if needed
+    rval = ((float)value / 2048.f) * range_val;
+
+    return rval;
+}
+
+quint8 WIMUConfig::getAccRangeValue(){
+    quint8 rval = (quint8)1 << (acc.range+1);
+    return rval;
+}
+
+quint16 WIMUConfig::getGyroRangeValue(){
+    quint16 rval = (((quint8)1 << (gyro.range))) * 250;
+    return rval;
+}
+
+float WIMUConfig::getMagRangeValue(){
+    float rval = 0.f;
+
+    switch (magneto.range){
+    case 0:
+        rval = 0.88f;
+        break;
+    case 1:
+        rval = 1.3f;
+        break;
+    case 2:
+        rval = 1.9f;
+        break;
+    case 3:
+        rval = 2.5f;
+        break;
+    case 4:
+        rval = 4.0f;
+        break;
+    case 5:
+        rval = 4.7f;
+        break;
+    case 6:
+        rval = 5.6f;
+        break;
+    case 7:
+        rval = 8.1f;
+        break;
+    default:
+        break;
+    }
+
+    return rval;
 }
 
 QByteArray WIMUConfig::serialize(){
     QByteArray bytes;
     QDataStream ds(&bytes, QIODevice::WriteOnly);
     ds.setByteOrder(QDataStream::LittleEndian);
+    ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     ds << enabled_modules;
     ds << datetime.time_offset;
@@ -176,6 +277,7 @@ QByteArray WIMUConfig::serialize(){
 void WIMUConfig::unserialize(QByteArray* data){
     QDataStream ds(*data);
     ds.setByteOrder(QDataStream::LittleEndian);
+    ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
     ds >> enabled_modules;
     ds >> datetime.time_offset;

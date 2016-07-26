@@ -24,11 +24,9 @@ public:
     void addIMUFrame(WIMU::IMUFrame_Struct &frame);
     void addGPSNavData(WIMU::GPSNavData_Struct &nav);
     void addGPSTrackerData(WIMU::GPSTrackerData_Struct &track);
+    void addPowerFrame(WIMU::PowerFrame_Struct &power);
 
 private:
-    void initWIMU3d();
-
-
     Ui::SensorDisplay *ui;
 
     DataGraph*              m_graphAcc;

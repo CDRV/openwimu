@@ -25,6 +25,9 @@ public:
     WIMU::GPSNavData_Struct convertToGPSNavData();
     WIMU::GPSTrackerData_Struct convertToGPSTrackerData();
 
+    // POWER
+    WIMU::PowerFrame_Struct convertToPowerFrame();
+
     WIMUBinaryStream  &operator = (const WIMUBinaryStream&);
 signals:
 

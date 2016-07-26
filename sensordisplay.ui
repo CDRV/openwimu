@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>831</width>
-    <height>649</height>
+    <width>483</width>
+    <height>710</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,6 +25,13 @@ QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rg
 
 QProgressBar::chunk {
 background: rgb(0,255,0);
+border-bottom-right-radius: 3px;
+border-bottom-left-radius: 3px;
+border: 1px solid black;
+}
+
+QProgressBar#progTemp::chunk {
+background: rgb(255,0,0);
 border-bottom-right-radius: 3px;
 border-bottom-left-radius: 3px;
 border: 1px solid black;
@@ -210,7 +217,7 @@ border: 1px solid black;
    </item>
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
-     <item>
+     <item alignment="Qt::AlignHCenter">
       <widget class="QFrame" name="frameIMU3D">
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -423,6 +430,12 @@ border: 1px solid black;
               </property>
               <item>
                <widget class="QWidget" name="wdgGPSMap" native="true">
+                <property name="minimumSize">
+                 <size>
+                  <width>500</width>
+                  <height>0</height>
+                 </size>
+                </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
                  <property name="spacing">
                   <number>0</number>
@@ -1224,6 +1237,22 @@ border: 1px solid black;
       </widget>
      </item>
      <item>
+      <spacer name="verticalSpacer_3">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::MinimumExpanding</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item alignment="Qt::AlignRight">
       <widget class="QFrame" name="frameGeneral">
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
@@ -1231,6 +1260,129 @@ border: 1px solid black;
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
+       <layout class="QVBoxLayout" name="verticalLayout_23">
+        <item>
+         <spacer name="verticalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="QProgressBar" name="progTemp">
+            <property name="maximumSize">
+             <size>
+              <width>10</width>
+              <height>48</height>
+             </size>
+            </property>
+            <property name="maximum">
+             <number>60</number>
+            </property>
+            <property name="value">
+             <number>24</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="format">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="3">
+           <widget class="QLabel" name="lblBattery">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>?????</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="imgBattery">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>48</width>
+              <height>48</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>48</width>
+              <height>48</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap resource="wimustudio2.qrc">:/icons/images/battery100.png</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLabel" name="lblTemp">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>????</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QLabel" name="lblStatus">
+          <property name="font">
+           <font>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>État inconnu.</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignBottom|Qt::AlignRight|Qt::AlignTrailing</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </item>
     </layout>

@@ -49,6 +49,7 @@ quint16 WIMUBinaryStream::fromBinaryStream(QByteArray &stream){
 
 WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
     WIMU::IMUFrame_Struct frame;
+    frame.frame_num=0;
 
     if (m_idModule!=WIMU::MODULE_IMU)
         return frame;
@@ -69,6 +70,36 @@ WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
         ds >> frame.quaternion[i];
 
     return frame;
+}
+
+WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(){
+    WIMU::PowerFrame_Struct power;
+    quint16 status;
+    power.battery = 0;
+
+    if (m_idModule!=WIMU::MODULE_POWER)
+        return power;
+
+    QDataStream ds(m_data);
+    ds.setByteOrder(QDataStream::LittleEndian);
+    ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
+
+    ds >> power.raw_temp;
+    ds >> power.raw_battery;
+    ds >> status;
+
+    power.status = ((WIMU::PowerStates)(status & 0x7F));
+    power.charging = (status & 0x80) > 0;
+
+    // Compute battery voltage
+    power.battery = (float)power.raw_battery / 100.f; //(3.3f / 1024) * (float)power.raw_battery / 2;
+    power.battery_pc = qMin((quint8)100, (quint8)((power.battery-3.3) / (3.7f-3.3f) * 100));
+
+    // Compute temperature value
+    power.temp = (float) power.raw_temp / 100.f; //((3.3f / 1024) * (float)power.raw_temp/2);
+    //power.temp = power.temp / 1.61f - 273.15; // 1.61 = AVG Slope from data sheet
+
+    return power;
 }
 
 WIMU::Modules_ID WIMUBinaryStream::getModuleID(){

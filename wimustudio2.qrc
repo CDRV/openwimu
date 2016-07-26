@@ -38,6 +38,18 @@
         <file>images/led_red.png</file>
         <file>images/led_yellow.png</file>
         <file>images/led_white.png</file>
+        <file>images/battery0.png</file>
+        <file>images/battery0_charge.png</file>
+        <file>images/battery20.png</file>
+        <file>images/battery20_charge.png</file>
+        <file>images/battery40.png</file>
+        <file>images/battery40_charge.png</file>
+        <file>images/battery60.png</file>
+        <file>images/battery60_charge.png</file>
+        <file>images/battery80.png</file>
+        <file>images/battery80_charge.png</file>
+        <file>images/battery100.png</file>
+        <file>images/battery100_charge.png</file>
     </qresource>
     <qresource prefix="/3d">
         <file>images/WIMU3D.obj</file>

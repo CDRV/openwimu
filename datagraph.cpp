@@ -65,7 +65,7 @@ DataGraph::DataGraph(quint8 axisNum, quint16 samplingRate, QStringList axis_titl
 
     this->canvas()->setCursor(QCursor(Qt::SplitHCursor));
 
-    setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Maximum);
+    setSizePolicy(QSizePolicy::MinimumExpanding,QSizePolicy::Maximum);
 
     // Create curves
     for (int i=0; i<m_axisNum; i++){

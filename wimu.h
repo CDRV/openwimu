@@ -24,8 +24,8 @@ namespace WIMU{
         qint16   acc_data[3];
         qint16   gyro_data[3];
         qint16   mag_data[3];
-        float     quaternion[4];
-    }IMUFrame_Struct;
+        float    quaternion[4];
+    } IMUFrame_Struct;
 
 
     // GPS
@@ -62,15 +62,34 @@ namespace WIMU{
         float               time_error;
         quint8              satellite_numbers;
         float               hdop;
-    }GPSNavData_Struct;
+    } GPSNavData_Struct;
 
     typedef struct{
         quint8                      nb_channels;
         QList<quint8>               sat_ids;
         QList< QVector <quint8> >   signal_ratios;
         QList<quint16>              sat_states;
+    } GPSTrackerData_Struct;
 
-    }GPSTrackerData_Struct;
+    // POWER
+    typedef enum{
+        POWER_STATE_ON,
+        POWER_STATE_LOWBAT,
+        POWER_STATE_USB,
+        POWER_STATE_USB_MASS,
+        POWER_STATE_USB_COM,
+        POWER_STATE_OFF
+    }  PowerStates;
+
+    typedef struct{
+        quint16          raw_battery;
+        quint16          raw_temp;
+        PowerStates     status;
+        bool            charging;
+        float           temp;
+        float           battery;
+        quint8          battery_pc;
+    } PowerFrame_Struct;
 }
 
 #endif // WIMU_H

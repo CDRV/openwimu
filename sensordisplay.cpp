@@ -63,9 +63,6 @@ SensorDisplay::SensorDisplay(WIMUConfig* config,QWidget *parent) :
     connect(ui->chkIMU,SIGNAL(stateChanged(int)),this,SLOT(manageCheckBoxClicked()));
     connect(ui->chkGPS,SIGNAL(stateChanged(int)),this,SLOT(manageCheckBoxClicked()));
 
-    // Init 3D display of WIMU
-    initWIMU3d();
-
     // Init GPS display
     m_webMap = new QWebEngineView(ui->wdgGPSMap);
     ui->wdgGPSMap->layout()->addWidget(m_webMap);
@@ -81,9 +78,27 @@ SensorDisplay::SensorDisplay(WIMUConfig* config,QWidget *parent) :
     ui->lblGPSStatus->setText("Aucune position.");
     ui->frameGPSPosition->setVisible(false);
 
-}
-
-void SensorDisplay::initWIMU3d(){
+    // Hide "useless" features (i.e. not enabled modules in the WIMU)
+    if (!config->isModuleEnabled(WIMU::MODULE_ACC)){
+        ui->chkAcc->setChecked(false);
+        ui->chkAcc->setVisible(false);
+    }
+    if (!config->isModuleEnabled(WIMU::MODULE_GYRO)){
+        ui->chkGyro->setChecked(false);
+        ui->chkGyro->setVisible(false);
+    }
+    if (!config->isModuleEnabled(WIMU::MODULE_MAGNETO)){
+        ui->chkMag->setChecked(false);
+        ui->chkMag->setVisible(false);
+    }
+    if (!config->isModuleEnabled(WIMU::MODULE_IMU)){
+        ui->chkIMU->setChecked(false);
+        ui->chkIMU->setVisible(false);
+    }
+    if (!config->isModuleEnabled(WIMU::MODULE_GPS)){
+        ui->chkGPS->setChecked(false);
+        ui->chkGPS->setVisible(false);
+    }
 
 }
 
@@ -248,6 +263,62 @@ void SensorDisplay::addGPSTrackerData(WIMU::GPSTrackerData_Struct &track){
             label->setText(QString::number(track.sat_ids.at(i)));
         }
     }
+
+}
+
+void SensorDisplay::addPowerFrame(WIMU::PowerFrame_Struct &power){
+    // Battery voltage
+    QString battery_icon = ":/icons/images/battery";
+    if (power.battery_pc == 100)
+        battery_icon += "100";
+    else if (power.battery_pc>=80)
+        battery_icon += "80";
+    else if (power.battery_pc>=60)
+        battery_icon += "60";
+    else if (power.battery_pc>=40)
+        battery_icon += "40";
+    else if (power.battery_pc>=20)
+        battery_icon += "20";
+    else
+        battery_icon += "0";
+
+    if (power.charging)
+        battery_icon += "_charge";
+    battery_icon += ".png";
+
+    ui->imgBattery->setPixmap(QPixmap(battery_icon));
+    ui->lblBattery->setText(QString::number(power.battery,'f',2)+" V");
+
+    // Temperature
+    ui->lblTemp->setText(QString::number(power.temp,'f',1) + " °C");
+    ui->progTemp->setValue((quint16)power.temp);
+
+    // Status label
+    QString status;
+    switch (power.status){
+    case WIMU::POWER_STATE_LOWBAT:
+        status = "Pile faible";
+        break;
+    case WIMU::POWER_STATE_OFF:
+        status = "Module éteint";
+        break;
+    case WIMU::POWER_STATE_ON:
+        status = "Module en fonction";
+        break;
+    case WIMU::POWER_STATE_USB:
+        status = "Branché sur USB";
+        break;
+    case WIMU::POWER_STATE_USB_COM:
+        status = "Branché USB (Mode COM)";
+        break;
+    case WIMU::POWER_STATE_USB_MASS:
+        status = "Branché USB (Mode Storage)";
+        break;
+    default:
+        status = "État inconnu.";
+    }
+
+    ui->lblStatus->setText(status);
 
 }
 

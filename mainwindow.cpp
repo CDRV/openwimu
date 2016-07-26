@@ -330,6 +330,12 @@ void MainWindow::usbBinDataReceived(WIMUBinaryStream bin){
 
     }
         break;
+    case WIMU::MODULE_POWER:{
+        WIMU::PowerFrame_Struct power = bin.convertToPowerFrame();
+        if (m_sensorDisplay)
+            m_sensorDisplay->addPowerFrame(power);
+    }
+        break;
     default:
         qDebug() << "Data from module: " << bin.getModuleID();
     }

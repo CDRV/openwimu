@@ -7,6 +7,7 @@
 
 #include "wimuconfigdialog.h"
 #include "wimu_usb_driver.h"
+#include "wimu_ble_driver.h"
 
 #include "sensordisplay.h"
 
@@ -35,12 +36,18 @@ private:
     void addToLog(QString log, LogTypes lt);
 
     void connectButtonSignals();
+
     void connectUSBSignals();
+    void connectUSBButtons();
+
+    void connectBLESignals();
+    void connectBLEButtons();
 
     Ui::MainWindow *ui;
 
     WIMUConfigDialog*   m_dlgWIMUConfig;
     WIMUUSBDriver*      m_wimuUSBDriver;
+    WIMUBLEDriver*      m_wimuBLEDriver;
 
     WIMUConfig          m_wimuConfig;
     WIMUSettings        m_wimuSettings;
@@ -79,6 +86,20 @@ private slots:
     void usbSettingsReceived(WIMUSettings settings);
     void usbTimeReceived(QDateTime module_time);
     void usbBinDataReceived(WIMUBinaryStream bin);
+
+    // BLE
+    void btnBLEConnectClicked();
+    void btnBLESyncTimeClicked();
+    void btnBLEStreamClicked();
+    void bleMessage(QString msg);
+    void bleAboutToClose();
+    void bleDeviceDiscovered(BLEDeviceContext* device);
+    void bleDeviceDestroyed(BLEDeviceContext* device);
+    void bleDeviceConnected(BLEDeviceContext* device);
+    void bleListCurrentChanged(int new_row);
+    void btnBLEDeviceConnectClicked();
+
+
 
 
 };

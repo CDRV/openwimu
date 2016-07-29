@@ -25,7 +25,12 @@ SOURCES += main.cpp\
            sensorbuffer.cpp \
            sensorcurve.cpp \
            wimubinarystream.cpp \
-            wimu3dviewer.cpp
+           wimu3dviewer.cpp \
+           BlueGiga\BLED112Driver.cpp \
+           BlueGiga\BLEDeviceContext.cpp \
+           BlueGiga\callbacks.cpp \
+           BlueGiga\cmd_def.c \
+           wimu_ble_driver.cpp
 
 HEADERS  += mainwindow.h \
             wimuconfigdialog.h \
@@ -38,7 +43,12 @@ HEADERS  += mainwindow.h \
             sensorcurve.h \
             wimubinarystream.h \
             wimu.h \
-            wimu3dviewer.h
+            wimu3dviewer.h \
+            BlueGiga\BLED112Driver.h \
+            BlueGiga\BLEDeviceContext.h \
+            BlueGiga\cmd_def.h \
+            BlueGiga\apitypes.h \
+            wimu_ble_driver.h
 
 FORMS    += mainwindow.ui \
             wimuconfigdialog.ui \

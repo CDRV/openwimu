@@ -50,6 +50,7 @@
         <file>images/battery80_charge.png</file>
         <file>images/battery100.png</file>
         <file>images/battery100_charge.png</file>
+        <file>images/wimu.png</file>
     </qresource>
     <qresource prefix="/3d">
         <file>images/WIMU3D.obj</file>

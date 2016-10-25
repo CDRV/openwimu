@@ -126,41 +126,62 @@ void SensorDisplay::addIMUFrame(WIMU::IMUFrame_Struct &frame){
 
     // Copy all the information into the required buffers
     for (int i=0; i<3; i++){
-        m_dataAcc.at(i)->addSample(m_config->convertAcc2g(frame.acc_data[i]));
-        minMaxAcc.setX(qMin((float)minMaxAcc.x(), m_dataAcc.at(i)->min()));
-        minMaxAcc.setY(qMax((float)minMaxAcc.y(), m_dataAcc.at(i)->max()));
+        if (frame.acc_valid){
+            m_dataAcc.at(i)->addSample(m_config->convertAcc2g(frame.acc_data[i]));
+            minMaxAcc.setX(qMin((float)minMaxAcc.x(), m_dataAcc.at(i)->min()));
+            minMaxAcc.setY(qMax((float)minMaxAcc.y(), m_dataAcc.at(i)->max()));
+        }
 
-        m_dataGyro.at(i)->addSample(m_config->convertGyro2degs(frame.gyro_data[i]));
-        minMaxGyro.setX(qMin((float)minMaxGyro.x(), m_dataGyro.at(i)->min()));
-        minMaxGyro.setY(qMax((float)minMaxGyro.y(), m_dataGyro.at(i)->max()));
+        if (frame.gyro_valid){
+            m_dataGyro.at(i)->addSample(m_config->convertGyro2degs(frame.gyro_data[i]));
+            minMaxGyro.setX(qMin((float)minMaxGyro.x(), m_dataGyro.at(i)->min()));
+            minMaxGyro.setY(qMax((float)minMaxGyro.y(), m_dataGyro.at(i)->max()));
+        }
 
-        m_dataMag.at(i)->addSample(m_config->convertMag2gauss(frame.mag_data[i]));
-        minMaxMag.setX(qMin((float)minMaxMag.x(), m_dataMag.at(i)->min()));
-        minMaxMag.setY(qMax((float)minMaxMag.y(), m_dataMag.at(i)->max()));
+        if (frame.mag_valid){
+            m_dataMag.at(i)->addSample(m_config->convertMag2gauss(frame.mag_data[i]));
+            minMaxMag.setX(qMin((float)minMaxMag.x(), m_dataMag.at(i)->min()));
+            minMaxMag.setY(qMax((float)minMaxMag.y(), m_dataMag.at(i)->max()));
+        }
 
-        m_dataIMU.at(i)->addSample(frame.quaternion[i]);
-        minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(i)->min()));
-        minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(i)->max()));
+        if (frame.quat_valid){
+            m_dataIMU.at(i)->addSample(frame.quaternion[i]);
+            minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(i)->min()));
+            minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(i)->max()));
+        }
     }
-    m_dataIMU.at(3)->addSample(frame.quaternion[3]);
-    minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(3)->min()));
-    minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(3)->max()));
+    //qDebug() << m_dataAcc.last()->sample(0).y() << m_dataAcc.last()->sample(1).y() << m_dataAcc.last()->sample(2).y();
+    if (frame.quat_valid){
+        m_dataIMU.at(3)->addSample(frame.quaternion[3]);
+        minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(3)->min()));
+        minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(3)->max()));
+    }
 
-    m_graphAcc->setAxisScale (QwtPlot::yLeft, minMaxAcc.x(), minMaxAcc.y());
-    m_graphGyro->setAxisScale(QwtPlot::yLeft, minMaxGyro.x(), minMaxGyro.y());
-    m_graphMag->setAxisScale(QwtPlot::yLeft, minMaxMag.x(), minMaxMag.y());
-    m_graphIMU->setAxisScale(QwtPlot::yLeft, minMaxIMU.x(), minMaxIMU.y());
+    if (frame.acc_valid){
+        m_graphAcc->setAxisScale (QwtPlot::yLeft, minMaxAcc.x(), minMaxAcc.y());
+        m_graphAcc->replot();
+    }
 
-    m_graphAcc->replot();
-    m_graphGyro->replot();
-    m_graphMag->replot();
-    m_graphIMU->replot();
+    if (frame.gyro_valid){
+        m_graphGyro->setAxisScale(QwtPlot::yLeft, minMaxGyro.x(), minMaxGyro.y());
+        m_graphGyro->replot();
+    }
 
-    // 3D IMU
-    ui->gl3D->setRotation(QQuaternion(frame.quaternion[0],
-                                      frame.quaternion[1],
-                                      frame.quaternion[2],
-                                      frame.quaternion[3]));
+    if (frame.mag_valid){
+        m_graphMag->setAxisScale(QwtPlot::yLeft, minMaxMag.x(), minMaxMag.y());
+        m_graphMag->replot();
+    }
+
+    if (frame.quat_valid){
+        m_graphIMU->setAxisScale(QwtPlot::yLeft, minMaxIMU.x(), minMaxIMU.y());
+        m_graphIMU->replot();
+
+        // 3D IMU
+        ui->gl3D->setRotation(QQuaternion(frame.quaternion[0],
+                                          frame.quaternion[1],
+                                          frame.quaternion[2],
+                                          frame.quaternion[3]));
+    }
 
 }
 
@@ -233,7 +254,6 @@ void SensorDisplay::addGPSTrackerData(WIMU::GPSTrackerData_Struct &track){
             //bar->setFormat(QString::number(mean_snr));
 
             //Color according to state
-            //qDebug() << "Sat" << track.sat_ids.at(i) << ", State: " << QString::number(track.sat_states.at(i),16);
             if (track.sat_states.at(i)>= 0x3F){ // Locked on
                 bar->setStyleSheet("QProgressBar::chunk {"
                                    "background: rgb(0,255,0);"
@@ -287,11 +307,19 @@ void SensorDisplay::addPowerFrame(WIMU::PowerFrame_Struct &power){
     battery_icon += ".png";
 
     ui->imgBattery->setPixmap(QPixmap(battery_icon));
-    ui->lblBattery->setText(QString::number(power.battery,'f',2)+" V");
+    if (power.battery > 0)
+        ui->lblBattery->setText(QString::number(power.battery,'f',2)+" V");
+    else
+        ui->lblBattery->setText(QString::number(power.battery_pc) + "%");
 
     // Temperature
-    ui->lblTemp->setText(QString::number(power.temp,'f',1) + " °C");
-    ui->progTemp->setValue((quint16)power.temp);
+    if (power.temp>-100){
+        ui->lblTemp->setText(QString::number(power.temp,'f',1) + " °C");
+        ui->progTemp->setValue((quint16)power.temp);
+    }else{
+        ui->lblTemp->setVisible(false);
+        ui->progTemp->setVisible(false);
+    }
 
     // Status label
     QString status;

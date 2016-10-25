@@ -91,16 +91,20 @@ private slots:
     void btnBLEConnectClicked();
     void btnBLESyncTimeClicked();
     void btnBLEStreamClicked();
+    void btnBLEDeviceConnectClicked();
+    void btnBLERecordClicked();
     void bleMessage(QString msg);
     void bleAboutToClose();
     void bleDeviceDiscovered(BLEDeviceContext* device);
     void bleDeviceDestroyed(BLEDeviceContext* device);
     void bleDeviceConnected(BLEDeviceContext* device);
     void bleListCurrentChanged(int new_row);
-    void btnBLEDeviceConnectClicked();
-
-
-
+    void bleIMUDataReceived(WIMU::IMUFrame_Struct data);
+    void bleIMUConfigReceived(WIMU::IMUConfig_Struct config);
+    void bleRemControlReceived(WIMUBLEDriver::BLERemControl_Struct control);
+    void bleBattReceived(quint8 batt_pc);
+    void bleGPSReceived(WIMU::GPSNavData_Struct gps);
+    void bleListDeviceDoubleClicked(QModelIndex index);
 
 };
 

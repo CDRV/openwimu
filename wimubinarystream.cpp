@@ -69,6 +69,11 @@ WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
     for (int i=0; i<4; i++)
         ds >> frame.quaternion[i];
 
+    frame.acc_valid = true;
+    frame.gyro_valid = true;
+    frame.mag_valid = true;
+    frame.quat_valid = true;
+
     return frame;
 }
 

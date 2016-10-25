@@ -10,6 +10,8 @@ QT += core gui
 QT += widgets
 QT += serialport
 QT += webenginewidgets
+#QT += testlib #Uncomment to have a debug console
+#CONFIG += console
 
 TARGET = WIMUStudio2
 TEMPLATE = app

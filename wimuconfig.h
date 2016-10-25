@@ -74,8 +74,6 @@ private:
     qint32 crc;
 
 public:
-
-
     explicit WIMUConfig(QObject *parent = 0);
     WIMUConfig(const WIMUConfig &copy, QObject *parent=0);
 
@@ -86,6 +84,8 @@ public:
 
     bool saveToFile(QString filename);
     bool loadFromFile(QString filename);
+
+    void loadFromIMUConfig(WIMU::IMUConfig_Struct &config);
 
     QByteArray serialize();
     void unserialize(QByteArray *data);

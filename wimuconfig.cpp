@@ -124,6 +124,14 @@ bool WIMUConfig::loadFromFile(QString filename){
 
 }
 
+void WIMUConfig::loadFromIMUConfig(WIMU::IMUConfig_Struct &config){
+    enabled_modules = config.enabled_modules;
+    general.sampling_rate = config.sampling_rate;
+    acc.range = config.acc_range;
+    gyro.range = config.gyro_range;
+    magneto.range = config.mag_range;
+}
+
 quint16 WIMUConfig::size(){
     quint16 size=2;
 

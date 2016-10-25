@@ -340,6 +340,13 @@ void WIMUUSBDriver::wimuGetConfig(){
 }
 
 void WIMUUSBDriver::wimuStream(bool enable){
+
+    // Check if we are still connected, if not, abort!
+    if (!m_serialPort->isOpen()){
+        wimuDisconnect();
+        return;
+    }
+
     if (enable){
         wimuSendCommand("bin", WimuCmdStream);
 

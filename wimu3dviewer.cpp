@@ -29,7 +29,7 @@ void WIMU3DViewer::initializeGL()
 
 
     GLfloat LightAmbient[]= { 0.5f, 0.5f, 0.5f, 0.5f };
-    GLfloat LightDiffuse[]= { 1.0f, 1.0f, 1.0f, 1.0f };
+    GLfloat LightDiffuse[]= { 0.75f, 0.75f, 0.75f, 1.0f };
     GLfloat LightPosition[]= { 0.0f, 1.0f, 0.0f, 1.0f };
 
     glLightfv(GL_LIGHT0, GL_AMBIENT, LightAmbient);
@@ -50,21 +50,26 @@ void WIMU3DViewer::resizeGL(int width, int height)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    glRotatef(90,0,0,1);
+    glRotatef(270,1,0,0);
+    glRotatef(90,0,1,0);
+
+   /* glRotatef(90,0.f,1.f,0.f);
 
     // Calculate aspect ratio
-    qreal aspect = qreal(width) / qreal(height ? height : 1);
+    qreal aspect = qreal(width) / qreal(height ? height : 1);*/
 
     // Set near plane to 3.0, far plane to 7.0, field of view 45 degrees
-    const qreal zNear = 0.1, zFar = 100.0;
+    /*const qreal zNear = 0.1, zFar = 7.0;
     float fovy=45;
     GLdouble xmin, xmax, ymin, ymax;
 
-        ymax = zNear * tan( fovy * M_PI / 360.0 );
-        ymin = -ymax;
-        xmin = ymin * aspect;
-        xmax = ymax * aspect;
+    ymax = zNear * tan( fovy * M_PI / 360.0 );
+    ymin = -ymax;
+    xmin = ymin * aspect;
+    xmax = ymax * aspect;
 
-        glFrustum( xmin, xmax, ymin, ymax, zNear, zFar );
+    glFrustum( xmin, xmax, ymin, ymax, zNear, zFar );*/
 
     //gluPerspective(45.f, aspect, zNear, zFar);
     //gluLookAt(0,0,15,0,0,0,0,1,0);
@@ -75,12 +80,17 @@ void WIMU3DViewer::paintGL()
 {
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
+    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 
    // Rotation of model, depending of quaternion value
-   QMatrix3x3 quat_mat = m_rotation.toRotationMatrix();
+   QQuaternion world_mat = m_rotation * QQuaternion(0.707,0,0,0.707);
+   QMatrix3x3 quat_mat = world_mat.toRotationMatrix();
    QMatrix4x4 rot_mat((QGenericMatrix<3,3,float>) quat_mat);
    glMultMatrixf(rot_mat.constData());
+
 
 
    /*glBegin(GL_TRIANGLES);
@@ -124,8 +134,6 @@ void WIMU3DViewer::paintGL()
    glDrawArrays(GL_TRIANGLES,   0, m_triangles.count());		// Draw the triangles
    glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
    glDisableClientState(GL_NORMAL_ARRAY);
-
-
 
 }
 
@@ -222,9 +230,9 @@ bool WIMU3DViewer::loadFromOBJFile(QString filename){
     }
 
     for (int i=0; i<m_vertexes.count(); i++){
-        m_vertexes[i].setX(m_vertexes.at(i).x()/max_x * .75);
-        m_vertexes[i].setY(m_vertexes.at(i).y()/max_y * .5);
-        m_vertexes[i].setZ(m_vertexes.at(i).z()/max_z * .5);
+        m_vertexes[i].setX(m_vertexes.at(i).x()/max_x * .5);
+        m_vertexes[i].setY(m_vertexes.at(i).y()/max_y * .75);
+        m_vertexes[i].setZ(m_vertexes.at(i).z()/max_z * .25);
     }
 
     // Build triangles for better performance display with OpenGL

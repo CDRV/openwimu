@@ -650,6 +650,12 @@ void WIMUConfigDialog::buttonConnectClicked(){
             ui->lblStatus->setText(tr("Connexion établie - ") + m_wimuDriver.comGetPortName());
             ui->lblStatus->setStyleSheet("QLabel{color:blue;}");
             ui->btnConnect->setText(tr("Déconnecter"));
+
+            int load = QMessageBox::question(this,"Chargement de la configuration?","Désirez-vous charger la configuration actuelle du module?",QMessageBox::Yes,QMessageBox::No);
+            if (load == QMessageBox::Yes){
+                buttonReadConfigClicked();
+            }
+
         }else{
             ui->lblStatus->setText(tr("Impossible de se connecter: ") + m_wimuDriver.comGetErrorString());
             ui->lblStatus->setStyleSheet("QLabel{color:red;}");

@@ -17,7 +17,7 @@ BLEDeviceContext::BLEDeviceContext(QByteArray mac, QString name, unsigned int ad
 
 BLEDeviceContext::~BLEDeviceContext(){
     //ble_cmd_connection_disconnect(m_connection);
-    ble_cmd_system_reset(0);
+    //ble_cmd_system_reset(0);
 
 }
 

@@ -24,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->stkControls->setCurrentWidget(ui->pgEmpty);
     ui->wdgCentral->setLayout(new QVBoxLayout());
 
-    addToLog("Bienvenue dans le WIMU Studio 2!", LogNormal);
+    addToLog("Bienvenue dans le WIMU Studio 2! (Version 2.0.2)", LogNormal);
 
     connect(&m_clock,SIGNAL(timeout()),this,SLOT(clockUpdate()));
     connect(&m_connectTimer,SIGNAL(timeout()),this,SLOT(usbConnect()));
@@ -54,7 +54,7 @@ void MainWindow::connectButtonSignals(){
     connect(ui->btnWIMUConfig,SIGNAL(clicked(bool)),this,SLOT(wimuConfigRequested()));
     connect(ui->btnSettings,SIGNAL(clicked(bool)),this,SLOT(appSettingsRequested()));
     connect(ui->btnBLEConnect,SIGNAL(clicked(bool)),this,SLOT(btnBLEDeviceConnectClicked()));
-
+    connect(ui->btnBLERecord,SIGNAL(clicked(bool)),this,SLOT(btnBLERecordClicked()));
 }
 
 void MainWindow::connectUSBSignals(){
@@ -91,6 +91,13 @@ void MainWindow::connectBLESignals(){
     connect(m_wimuBLEDriver,SIGNAL(bleDeviceDiscovered(BLEDeviceContext*)),this,SLOT(bleDeviceDiscovered(BLEDeviceContext*)));
     connect(m_wimuBLEDriver,SIGNAL(bleDeviceConnected(BLEDeviceContext*)),this,SLOT(bleDeviceConnected(BLEDeviceContext*)));
     connect(m_wimuBLEDriver,SIGNAL(timeReceived(QDateTime)),this,SLOT(usbTimeReceived(QDateTime)));
+    connect(m_wimuBLEDriver,SIGNAL(imuDataReceived(WIMU::IMUFrame_Struct)),this,SLOT(bleIMUDataReceived(WIMU::IMUFrame_Struct)));
+    connect(m_wimuBLEDriver,SIGNAL(imuConfigReceived(WIMU::IMUConfig_Struct)),this, SLOT(bleIMUConfigReceived(WIMU::IMUConfig_Struct)));
+    connect(m_wimuBLEDriver,SIGNAL(remControlReceived(WIMUBLEDriver::BLERemControl_Struct)),this,SLOT(bleRemControlReceived(WIMUBLEDriver::BLERemControl_Struct)));
+    connect(m_wimuBLEDriver,SIGNAL(battLevelReceived(quint8)),this,SLOT(bleBattReceived(quint8)));
+    connect(m_wimuBLEDriver,SIGNAL(gpsDataReceived(WIMU::GPSNavData_Struct)),this,SLOT(bleGPSReceived(WIMU::GPSNavData_Struct)));
+
+    connect(ui->lstBLEDevices,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(bleListDeviceDoubleClicked(QModelIndex)));
 
 }
 
@@ -163,6 +170,7 @@ void MainWindow::updateToolsDisplay(){
     ui->txtPath->setVisible(ui->btnDisk->isChecked());
     ui->btnBrowse->setVisible(ui->btnDisk->isChecked());
     ui->grpSources->updateGeometry();
+    ui->lblBLERecNum->setVisible(ui->btnBLERecord->isChecked());
 }
 
 void MainWindow::addToLog(QString log, LogTypes lt){
@@ -229,6 +237,10 @@ void MainWindow::btnUSBConnectClicked(){
         m_connectTimer.setSingleShot(true);
         m_connectTimer.start();
 
+        // Disable buttons while no config
+        ui->btnSyncTime->setEnabled(false);
+        ui->btnStream->setEnabled(false);
+
     }else{ // Was unchecked, so disconnect
        m_wimuUSBDriver->wimuDisconnect();
        m_wimuUSBDriver->deleteLater();
@@ -280,7 +292,7 @@ void MainWindow::btnBLEConnectClicked(){
         status = m_wimuBLEDriver->bledFindAndPrepare();
 
         if (!status){
-            // No WIMU
+            // No BLED112
             addToLog(m_wimuBLEDriver->comGetErrorString(),LogError);
             ui->btnConnect->setChecked(false);
             m_wimuBLEDriver->deleteLater();
@@ -313,6 +325,13 @@ void MainWindow::btnBLEConnectClicked(){
         ui->btnDisk->setEnabled(false);
         ui->btnUSB->setEnabled(false);
 
+        ui->btnStream->setChecked(false);
+        ui->btnStream->setEnabled(false);
+        ui->btnSyncTime->setEnabled(false);
+
+        ui->btnBLEConnect->setChecked(false);
+        ui->btnBLEConnect->setText("Lier");
+
         // Request config & settings
         /*m_wimuUSBDriver->wimuStream(false); // Stop streaming, if needed
         m_connectTimer.setInterval(200);
@@ -332,6 +351,11 @@ void MainWindow::btnBLEConnectClicked(){
        ui->btnBLE->setEnabled(true);
        ui->btnDisk->setEnabled(true);
        ui->btnUSB->setEnabled(true);
+
+       ui->btnStream->setChecked(false);
+       ui->btnStream->setEnabled(false);
+       ui->btnSyncTime->setEnabled(false);
+       m_wimuDateTime = QDateTime();
     }
 }
 
@@ -342,6 +366,49 @@ void MainWindow::btnBLESyncTimeClicked(){
 }
 
 void MainWindow::btnBLEStreamClicked(){
+    // Start streaming data according to selected items
+    if (ui->btnStream->isChecked()){
+        if (m_centralWidget){
+            ui->wdgCentral->layout()->removeWidget(m_centralWidget);
+            m_centralWidget->deleteLater();
+        }
+        if (m_sensorDisplay)
+            m_sensorDisplay->deleteLater();
+        m_sensorDisplay = new SensorDisplay(&m_wimuConfig);
+
+        m_centralWidget = m_sensorDisplay;
+        ui->wdgCentral->layout()->addWidget(m_centralWidget);
+
+        ui->btnSyncTime->setEnabled(false);
+
+        m_wimuBLEDriver->wimuIMUStreaming(ui->chkBLEEnableIMU->isChecked());
+        m_wimuBLEDriver->wimuRAWStreaming(ui->chkBLEEnableRaw->isChecked());
+        m_wimuBLEDriver->wimuGPSStreaming(ui->chkBLEEnableGPS->isChecked());
+        m_wimuBLEDriver->wimuBattStreaming(ui->chkBLEEnableBatt->isChecked());
+
+    }else{
+        m_wimuBLEDriver->wimuIMUStreaming(false);
+        m_wimuBLEDriver->wimuRAWStreaming(false);
+        m_wimuBLEDriver->wimuGPSStreaming(false);
+        m_wimuBLEDriver->wimuBattStreaming(false);
+
+        ui->btnSyncTime->setEnabled(true);
+    }
+}
+
+void MainWindow::btnBLERecordClicked(){
+    // Start/stop recording
+    m_wimuBLEDriver->wimuRecord(ui->btnBLERecord->isChecked());
+
+    if (ui->btnBLERecord->isChecked()){
+        ui->btnBLERecord->setText("Arrêter Enregistrement");
+    }else{
+        ui->btnBLERecord->setText("Débuter Enregistrement");
+    }
+
+    ui->lblBLERecNum->setVisible(ui->btnBLERecord->isChecked());
+    ui->btnStream->setEnabled(!ui->btnBLERecord->isChecked());
+    ui->btnSyncTime->setEnabled(!ui->btnBLERecord->isChecked());
 
 }
 
@@ -367,6 +434,10 @@ void MainWindow::usbError(QSerialPort::SerialPortError error){
     Q_UNUSED(error)
 
     addToLog("USB: " + m_wimuUSBDriver->comGetErrorString(),LogError);
+
+    m_wimuUSBDriver->wimuDisconnect();
+    ui->btnSyncTime->setEnabled(false);
+
 }
 
 void MainWindow::usbCmdError(WIMUUSBDriver::WIMUCommandID id){
@@ -408,6 +479,10 @@ void MainWindow::usbConfigReceived(WIMUConfig config){
     m_wimuConfig = config;
 
     addToLog("Échantillonnage à " + QString::number(config.general.sampling_rate) + "Hz",LogDebug);
+
+    // Enable buttons
+    ui->btnSyncTime->setEnabled(true);
+    ui->btnStream->setEnabled(true);
 }
 
 void MainWindow::usbSettingsReceived(WIMUSettings settings){
@@ -595,8 +670,8 @@ void MainWindow::btnBLEDeviceConnectClicked(){
             ui->btnBLEConnect->setText("Délier");
             addToLog("Connexion établie avec " + ui->lstBLEDevices->currentItem()->text(), LogInfo);
 
-            ui->btnSyncTime->setEnabled(true);
-            ui->btnStream->setEnabled(true);
+            //ui->btnSyncTime->setEnabled(true);
+            //ui->btnStream->setEnabled(true);
             ui->grpBLE->setEnabled(true);
 
             // Query module time
@@ -604,12 +679,74 @@ void MainWindow::btnBLEDeviceConnectClicked(){
         }
     }else{
         // Disconnect
-        m_wimuBLEDriver->wimuDisconnect();
-        ui->lstBLEDevices->setEnabled(true);
-        ui->btnBLEConnect->setText("Lier");
-        addToLog("Connexion rompue avec " + ui->lstBLEDevices->currentItem()->text(), LogInfo);
-        ui->btnSyncTime->setEnabled(false);
-        ui->btnStream->setEnabled(false);
-        ui->grpBLE->setEnabled(false);
+        if (m_wimuBLEDriver->wimuIsConnected()){
+            m_wimuBLEDriver->wimuDisconnect();
+            ui->lstBLEDevices->setEnabled(true);
+            ui->btnBLEConnect->setText("Lier");
+            addToLog("Connexion rompue avec " + ui->lstBLEDevices->currentItem()->text(), LogInfo);
+            ui->btnSyncTime->setEnabled(false);
+            ui->btnStream->setEnabled(false);
+            ui->grpBLE->setEnabled(false);
+
+            ui->btnStream->setChecked(false);
+            m_wimuDateTime = QDateTime();
+        }
     }
+}
+
+void MainWindow::bleIMUDataReceived(WIMU::IMUFrame_Struct data){
+    //qDebug() << "BLE IMU Data";
+    if (m_sensorDisplay)
+        m_sensorDisplay->addIMUFrame(data);
+}
+
+void MainWindow::bleIMUConfigReceived(WIMU::IMUConfig_Struct config){
+    // Fill the corresponding field in the WIMU Config in order for the sensor display to work properly...
+
+    // Config received - enable buttons
+    ui->btnSyncTime->setEnabled(true);
+    ui->btnStream->setEnabled(true);
+    m_wimuConfig.loadFromIMUConfig(config);
+}
+
+void MainWindow::bleRemControlReceived(WIMUBLEDriver::BLERemControl_Struct control){
+
+    // Update the current record number label
+    ui->lblBLERecNum->setText("Enregistrement #" + QString::number(control.rec_id));
+
+    ui->lblBLERecNum->setVisible((control.status & 0x01)>0);
+
+    // Ensure record button is in the correct state
+    ui->btnBLERecord->setChecked((control.status & 0x01)>0);
+    ui->btnStream->setEnabled(!ui->btnBLERecord->isChecked());
+    ui->btnSyncTime->setEnabled(!ui->btnBLERecord->isChecked());
+}
+
+void MainWindow::bleBattReceived(quint8 batt_pc){
+    //qDebug() << "BLE Batt Data";
+    if (m_sensorDisplay){
+        WIMU::PowerFrame_Struct power;
+        power.battery_pc = batt_pc;
+        power.battery = 0;
+        power.charging = false; // Not yet available!
+        power.temp = -100;      // Not yet available!
+        power.status = WIMU::POWER_STATE_ON;    // Not yet available!
+        m_sensorDisplay->addPowerFrame(power);
+    }
+}
+
+void MainWindow::bleGPSReceived(WIMU::GPSNavData_Struct gps){
+    //qDebug() << "BLE GPS Data";
+    if (m_sensorDisplay){
+        m_sensorDisplay->addGPSNavData(gps);
+    }
+}
+
+void MainWindow::bleListDeviceDoubleClicked(QModelIndex index){
+    Q_UNUSED(index)
+
+    ui->btnBLEConnect->setChecked(true);
+    // Link that device
+    btnBLEDeviceConnectClicked();
+
 }

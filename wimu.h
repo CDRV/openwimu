@@ -20,12 +20,24 @@ namespace WIMU{
 
     // IMU
     typedef struct{
-        quint16  frame_num;
-        qint16   acc_data[3];
-        qint16   gyro_data[3];
-        qint16   mag_data[3];
-        float    quaternion[4];
+      quint16  frame_num;
+      qint16   acc_data[3];
+      qint16   gyro_data[3];
+      qint16   mag_data[3];
+      float    quaternion[4];
+      bool     acc_valid;
+      bool     gyro_valid;
+      bool     mag_valid;
+      bool     quat_valid;
     } IMUFrame_Struct;
+
+    typedef struct {
+      quint16   enabled_modules;
+      quint8    sampling_rate;
+      quint8    acc_range;
+      quint8    gyro_range;
+      quint8    mag_range;
+    } IMUConfig_Struct;
 
 
     // GPS
@@ -90,6 +102,7 @@ namespace WIMU{
         float           battery;
         quint8          battery_pc;
     } PowerFrame_Struct;
+
 }
 
 #endif // WIMU_H

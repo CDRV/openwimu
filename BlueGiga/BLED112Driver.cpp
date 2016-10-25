@@ -29,7 +29,7 @@ void ble_serial_output(uint8 len1,uint8* data1,uint16 len2,uint8* data2)
 bool BLED112Driver::init(const QString &port)
 {
     m_serialPort.setPortName(port);
-    m_serialPort.setBaudRate(230400);
+    m_serialPort.setBaudRate(256000);
     m_serialPort.setDataBits(QSerialPort::Data8);
     m_serialPort.setParity(QSerialPort::NoParity);
     m_serialPort.setStopBits(QSerialPort::OneStop);
@@ -56,8 +56,29 @@ bool BLED112Driver::init(const QString &port)
     m_serialPort.waitForBytesWritten(-1);
     m_serialPort.close();
 
-    while (!m_serialPort.open(QIODevice::ReadWrite)); // Wait for BLED to come back alive
+    for (int i=0; i<3; i++){
+        /*while (!*/m_serialPort.open(QIODevice::ReadWrite)/*)*/; // Wait for BLED to come back alive
+        if (m_serialPort.isOpen())
+            break;
 
+        // Wait a little...
+        QThread::msleep(1000);
+    }
+
+    if (!m_serialPort.isOpen()){
+        return false;
+    }
+
+    startScan();
+
+
+    m_timer = new QTimer(this);
+    connect(m_timer,SIGNAL(timeout()),this,SLOT(timeout()));
+    m_timer->start(100); //100ms timeout is fast enough
+    return true;
+}
+
+void BLED112Driver::startScan(){
     //stop previous operation
     ble_cmd_gap_end_procedure();
 
@@ -67,12 +88,6 @@ bool BLED112Driver::init(const QString &port)
     //Start scan
     m_lastScanDateTime = QDateTime::currentDateTime();
     ble_cmd_gap_discover(gap_discover_generic);
-
-
-    m_timer = new QTimer(this);
-    connect(m_timer,SIGNAL(timeout()),this,SLOT(timeout()));
-    m_timer->start(100); //100ms timeout is fast enough
-    return true;
 }
 
 void BLED112Driver::closeConnections(){
@@ -162,8 +177,7 @@ void BLED112Driver::connectionStatusEvent(const ble_msg_connection_status_evt_t 
                 delete context;
 
                 // Restart scan for another one (or the same one)
-                ble_cmd_gap_end_procedure();
-                ble_cmd_gap_discover(gap_discover_generic);
+                startScan();
 
                 //Exit for loop
                 break;
@@ -185,7 +199,6 @@ void BLED112Driver::connectionDisconnectedEvent(const ble_msg_connection_disconn
             //qDebug() << m_contextList.at(i)->m_name << " disconnected.";
             context->connectionDisconnectedEvent(msg);
 
-            ble_cmd_gap_end_procedure();
 
             //Emit signal before deleting
             emit deviceDestroyed(context);
@@ -193,7 +206,7 @@ void BLED112Driver::connectionDisconnectedEvent(const ble_msg_connection_disconn
             delete context;
 
             // Restart scan
-            ble_cmd_gap_discover(gap_discover_generic);
+            startScan();
 
             /*if (m_serialPort.isOpen())
                 m_serialPort.close();
@@ -310,6 +323,8 @@ void BLED112Driver::timeout()
 {
     QList<BLEDeviceContext*> toRemoveList;
 
+    //qDebug() << "TimeOut!";
+
     //State machine handling for each context...
     //Seems to work
     for (int i = 0; i < m_contextList.size(); i++)
@@ -351,8 +366,7 @@ void BLED112Driver::timeout()
 
         if (m_contextList.empty())
         {
-            ble_cmd_gap_end_procedure();
-            ble_cmd_gap_discover(gap_discover_generic);
+            startScan();
         }
 
         //ble_cmd_gap_discover(gap_discover_generic);
@@ -374,9 +388,130 @@ void BLED112Driver::writeSerialData(uint8 len1, uint8 *data1, uint16 len2, uint8
     if (data2 != NULL && len2 > 0)
         bytes_written += m_serialPort.write((const char*) data2,len2);
 
-    //qDebug() << "Wrote bytes :" << bytes_written;
+    QByteArray sdata1 ((const char*)data1,len1);
+    //qDebug() << "Wrote " << msgBGAPItoString(sdata1);// << " AND " << sdata2;
 
     //m_serialPort.waitForBytesWritten(-1);
+}
+
+QString BLED112Driver::msgBGAPItoString(QByteArray msg){
+    QString rval = "";
+
+    if (msg.count() < 4)
+        return rval;
+
+    if ((msg.at(0) & 0x80) == 0)
+        rval += "CMD/RSP: ";
+    else
+        rval += "EVENT  : ";
+
+    rval += "CID=";
+
+    switch (msg.at(2)){ // Command class ID & command ID
+    case 0:
+        rval += "System(0),     CMD=";
+        switch(msg.at(3)){
+        case 0:
+            rval+= "Reset          ";
+            break;
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+
+        break;
+    case 1:
+        rval += "Store(1),      CMD=";
+        switch(msg.at(3)){
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    case 2:
+        rval += "GATT DB(2),    CMD=";
+        switch(msg.at(3)){
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    case 3:
+        rval += "Connection(3), CMD=";
+        switch(msg.at(3)){
+        case 0:
+            rval += "Disconnect    ";
+            break;
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    case 4:
+        rval += "GATT(4),       CMD=";
+        switch(msg.at(3)){
+        case 1:
+            rval+= "Read by Group  ";
+            break;
+        case 2:
+            rval+= "Read by Type   ";
+            break;
+        case 3:
+            rval+= "Find Info      ";
+            break;
+        case 4:
+            rval+= "Read by Handle ";
+            break;
+        case 5:
+            rval+= "Attribute Write";
+            break;
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    case 5:
+        rval += "Security(5),   CMD=";
+        switch(msg.at(3)){
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    case 6:
+        rval += "GAP(6),        CMD=";
+        switch(msg.at(3)){
+        case 2:
+            rval += "Discover      ";
+            break;
+        case 3:
+            rval += "Connect Direct ";
+            break;
+        case 4:
+            rval += "End Procedure  ";
+            break;
+        case 7:
+            rval += "Set Scan Params";
+            break;
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    case 7:
+        rval += "Hardware(7), CMD=";
+        switch(msg.at(3)){
+        default:
+            rval+= "Unknown - " + QString::number(msg.at(3));
+        }
+        break;
+    default:
+        rval += "Unknown - " + QString::number(msg.at(2));
+        break;
+    }
+
+    uint16 payload = ((msg.at(0) & 0x03)<<8) + msg.at(1);
+    rval += ", LEN= " + QString::number(payload);
+
+    QByteArray data = msg.right(msg.length()-4);
+    rval +=  ", DATA= " + data.toHex();
+
+
+
+    return rval;
 }
 
 BLEDeviceContext* BLED112Driver::connectDevice(const QString &id){

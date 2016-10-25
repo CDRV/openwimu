@@ -43,6 +43,11 @@ public:
 
     void informationFoundEvent(const struct ble_msg_attclient_find_information_found_evt_t *msg);
 
+private:
+    void startScan();
+
+    QString msgBGAPItoString(QByteArray msg);
+
 signals:
 
     void deviceDiscovered(BLEDeviceContext *context);

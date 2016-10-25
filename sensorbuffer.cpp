@@ -110,7 +110,8 @@ void SensorBuffer::addSample(float data){
             old_value = values[startFillIndex];
             values[startFillIndex++]=data;
         }else{
-            old_value = values.takeFirst();
+            if (values.count()>0)
+                old_value = values.takeFirst();
             values.append(data);
         }
     }

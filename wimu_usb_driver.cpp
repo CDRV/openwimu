@@ -169,7 +169,7 @@ void WIMUUSBDriver::serialPortDataReady(){
         if (m_serialBuffer.count()<WIMUConfig::size())
             return;
         // Load data
-        WIMUConfig config;
+        WIMUConfig config(3); // TODO: detect and use correct hardware version...
 
         while( !(m_serialBuffer.at(0) == char(0xEA) && m_serialBuffer.at(1) == char(0xEA)) &&
               m_serialBuffer.count()>=2){ // Sync on sync byte

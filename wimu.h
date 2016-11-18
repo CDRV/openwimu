@@ -4,6 +4,15 @@
 #include <QDateTime>
 
 namespace WIMU{
+
+    enum LogTypes{
+        LogNormal,
+        LogWarning,
+        LogError,
+        LogInfo,
+        LogDebug
+    };
+
     typedef enum{
       MODULE_CPU=0,
       MODULE_BLE=1,

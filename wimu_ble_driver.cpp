@@ -421,7 +421,7 @@ Q_UNUSED(type)
                 data.gyro_data[i] = (((qint16)(value.at(9+(i*2)) & 0xff)) << 8)  | (value.at(8+(i*2)) & 0xff);
                 data.mag_data[i] = (((qint16)(value.at(15+(i*2)) & 0xff)) << 8)  | (value.at(14+(i*2)) & 0xff);
             }
-            //qDebug() << "Received: " << data.acc_data[0] << data.acc_data[1] << data.acc_data[2];
+            //qDebug() << "Received: " << value.toHex() << " - " << data.acc_data[0] << data.acc_data[1] << data.acc_data[2];
             data.acc_valid  = true;
             data.gyro_valid = true;
             data.mag_valid  = true;

@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QTimer>
 #include <QDateTime>
+#include <QSettings>
+
+#include "datatreeitem.h"
 
 #include "wimuconfigdialog.h"
 #include "wimu_usb_driver.h"
@@ -20,20 +23,13 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    enum LogTypes{
-        LogNormal,
-        LogWarning,
-        LogError,
-        LogInfo,
-        LogDebug
-    };
+
 
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 private:
     void updateToolsDisplay();
-    void addToLog(QString log, LogTypes lt);
 
     void connectButtonSignals();
 
@@ -43,25 +39,43 @@ private:
     void connectBLESignals();
     void connectBLEButtons();
 
+    void connectFolderSignals();
+    void connectFolderButtons();
+    void clearFolderLists();
+    DataTreeItem::DataType identifyFolderType(QFileInfo &folder);
+    void loadFolders(QFileInfo &base_folder, DataTreeItem *base_item);
+    void addItemToCorrectList(DataTreeItem* item);
+
+    void loadAppSettings();
+
     Ui::MainWindow *ui;
 
-    WIMUConfigDialog*   m_dlgWIMUConfig;
-    WIMUUSBDriver*      m_wimuUSBDriver;
-    WIMUBLEDriver*      m_wimuBLEDriver;
+    WIMUConfigDialog*       m_dlgWIMUConfig;
+    WIMUUSBDriver*          m_wimuUSBDriver;
+    WIMUBLEDriver*          m_wimuBLEDriver;
 
-    WIMUConfig          m_wimuConfig;
-    WIMUSettings        m_wimuSettings;
+    WIMUConfig              m_wimuConfig;
+    WIMUSettings            m_wimuSettings;
 
-    QTimer              m_clock;
-    QTimer              m_connectTimer;
-    QDateTime           m_wimuDateTime;
-    bool                m_timeSyncRequested;
+    QTimer                  m_clock;
+    QTimer                  m_connectTimer;
+    QDateTime               m_wimuDateTime;
+    bool                    m_timeSyncRequested;
 
-    QWidget*            m_centralWidget;
-    SensorDisplay*      m_sensorDisplay;
+    QWidget*                m_centralWidget;
+    SensorDisplay*          m_sensorDisplay;
+
+    QSettings*              m_appSettings;
+
+    QList<DataTreeItem*>    m_listExperiments;
+    QList<DataTreeItem*>    m_listDatas;
+    QList<DataTreeItem*>    m_listPatients;
+
 
 
 private slots:
+    void addToLog(QString log, WIMU::LogTypes lt);
+
     void srcBLESelected();
     void srcUSBSelected();
     void srcFolderSelected();
@@ -105,6 +119,10 @@ private slots:
     void bleBattReceived(quint8 batt_pc);
     void bleGPSReceived(WIMU::GPSNavData_Struct gps);
     void bleListDeviceDoubleClicked(QModelIndex index);
+
+    // Folders
+    void btnBrowseClicked();
+    void folderPathChanged(QString new_path);
 
 };
 

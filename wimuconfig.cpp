@@ -2,7 +2,18 @@
 
 #include <QFile>
 
-WIMUConfig::WIMUConfig(QObject *parent) : QObject(parent)
+WIMUConfig::WIMUConfig(quint8 hw_id, QObject *parent) :
+    QObject(parent),
+    m_hwId(hw_id)
+{
+    qRegisterMetaType<WIMUConfig>("WIMUConfig");
+
+    setDefaults();
+}
+
+WIMUConfig::WIMUConfig(QObject *parent) :
+    QObject(parent),
+    m_hwId(3)
 {
     qRegisterMetaType<WIMUConfig>("WIMUConfig");
 
@@ -200,45 +211,96 @@ float WIMUConfig::convertMag2gauss(qint16 &value){
 }
 
 quint8 WIMUConfig::getAccRangeValue(){
-    quint8 rval = (quint8)1 << (acc.range+1);
+    quint8 rval=0;
+
+    if (m_hwId==3)
+        rval = (quint8)1 << (acc.range+1);
+
+    if (m_hwId==2){
+        if (acc.range==0)
+            rval = 1; // Real value should be 1.5
+        else{
+            rval = acc.range*2;
+        }
+    }
+
     return rval;
 }
 
 quint16 WIMUConfig::getGyroRangeValue(){
-    quint16 rval = (((quint8)1 << (gyro.range))) * 250;
+    quint16 rval;
+
+    if (m_hwId==3)
+        rval = (((quint8)1 << (gyro.range))) * 250;
+
+    if (m_hwId==2)
+        rval = 500;
     return rval;
 }
 
 float WIMUConfig::getMagRangeValue(){
     float rval = 0.f;
 
-    switch (magneto.range){
-    case 0:
-        rval = 0.88f;
-        break;
-    case 1:
-        rval = 1.3f;
-        break;
-    case 2:
-        rval = 1.9f;
-        break;
-    case 3:
-        rval = 2.5f;
-        break;
-    case 4:
-        rval = 4.0f;
-        break;
-    case 5:
-        rval = 4.7f;
-        break;
-    case 6:
-        rval = 5.6f;
-        break;
-    case 7:
-        rval = 8.1f;
-        break;
-    default:
-        break;
+    if (m_hwId==3){
+        switch (magneto.range){
+        case 0:
+            rval = 0.88f;
+            break;
+        case 1:
+            rval = 1.3f;
+            break;
+        case 2:
+            rval = 1.9f;
+            break;
+        case 3:
+            rval = 2.5f;
+            break;
+        case 4:
+            rval = 4.0f;
+            break;
+        case 5:
+            rval = 4.7f;
+            break;
+        case 6:
+            rval = 5.6f;
+            break;
+        case 7:
+            rval = 8.1f;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (m_hwId==2){
+        switch (magneto.range){
+        case 0:
+            rval = 0.7f;
+            break;
+        case 1:
+            rval = 1.0f;
+            break;
+        case 2:
+            rval = 1.5f;
+            break;
+        case 3:
+            rval = 2.0f;
+            break;
+        case 4:
+            rval = 3.2f;
+            break;
+        case 5:
+            rval = 3.8f;
+            break;
+        case 6:
+            rval = 4.5f;
+            break;
+        case 7:
+            rval = 6.5f;
+            break;
+        default:
+            break;
+        }
     }
 
     return rval;
@@ -287,41 +349,92 @@ void WIMUConfig::unserialize(QByteArray* data){
     ds.setByteOrder(QDataStream::LittleEndian);
     ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-    ds >> enabled_modules;
-    ds >> datetime.time_offset;
-    ds >> datetime.enable_gps_time;
-    ds >> datetime.enable_auto_offset;
-    ds >> ui.led_blink_time;
-    ds >> ui.write_led;
-    ds >> ui.enable_marking;
-    ds >> ui.gps_fix_led;
-    ds >> ui.ble_activity_led;
-    ds >> general.sampling_rate;
-    ds >> general.enable_watchdog;
-    ds >> logger.max_files_in_folder;
-    ds >> logger.split_by_day;
-    ds >> gps.interval;
-    ds >> gps.force_cold;
-    ds >> gps.enable_scan_when_charged;
-    ds >> power.power_manage;
-    ds >> power.adv_power_manage;
-    ds >> power.enable_motion_detection;
-    ds >> ble.enable_control;
-    ds >> acc.range;
-    ds >> gyro.range;
-    ds >> magneto.range;
-    /*quint8 beta[4];
-    //ds >> imu.beta;
-    ds >> beta[0];
-    ds >> beta[1];
-    ds >> beta[2];
-    ds >> beta[3];
-    imu.beta = *((float*)&beta[0]);*/
-    ds >> imu.beta;
+    if (m_hwId==2){
+        quint16 buf16;
+        quint8 buf8;
 
-    ds >> imu.disable_magneto;
-    ds >> imu.auto_calib_gyro;
-    ds >> crc;
+        ds >> enabled_modules;
+        ds >> buf16;
+
+        // Log filetime
+        ds >> buf8;
+
+        // Log reset time
+        ds >> buf8;
+
+        // CPU options
+        ds >> buf8;
+        general.enable_watchdog = (buf8 & 0x01)>0;
+        if ( (buf8 & 0x02)>0)
+            general.sampling_rate = 100;
+        else
+            general.sampling_rate = 50;
+        ui.led_blink_time = ((buf8 & 0x7c) >> 2);
+
+        // Logger options
+        ds >> buf8;
+        ui.write_led = (buf8 & 0x01)>0;
+        ui.enable_marking = (buf8 & 0x02)>0;
+        logger.split_by_day = (buf8 & 0x04)>0;
+        datetime.time_offset = ((qint8)((buf8 & 0xf8) >> 3));
+
+        // GPS dead time
+        ds >> buf8;
+
+        // GPS Degrad time
+        ds >> buf8;
+
+        // GPS Deadrec time
+        ds >> buf8;
+
+        // GPS options
+        ds >> buf8;
+        gps.force_cold = (buf8 & 0x08)>0;
+
+        // Acc range
+        ds >> acc.range;
+
+        // Mag range
+        ds >> magneto.range;
+    }
+
+    if (m_hwId==3){
+        ds >> enabled_modules;
+        ds >> datetime.time_offset;
+        ds >> datetime.enable_gps_time;
+        ds >> datetime.enable_auto_offset;
+        ds >> ui.led_blink_time;
+        ds >> ui.write_led;
+        ds >> ui.enable_marking;
+        ds >> ui.gps_fix_led;
+        ds >> ui.ble_activity_led;
+        ds >> general.sampling_rate;
+        ds >> general.enable_watchdog;
+        ds >> logger.max_files_in_folder;
+        ds >> logger.split_by_day;
+        ds >> gps.interval;
+        ds >> gps.force_cold;
+        ds >> gps.enable_scan_when_charged;
+        ds >> power.power_manage;
+        ds >> power.adv_power_manage;
+        ds >> power.enable_motion_detection;
+        ds >> ble.enable_control;
+        ds >> acc.range;
+        ds >> gyro.range;
+        ds >> magneto.range;
+        /*quint8 beta[4];
+        //ds >> imu.beta;
+        ds >> beta[0];
+        ds >> beta[1];
+        ds >> beta[2];
+        ds >> beta[3];
+        imu.beta = *((float*)&beta[0]);*/
+        ds >> imu.beta;
+
+        ds >> imu.disable_magneto;
+        ds >> imu.auto_calib_gyro;
+        ds >> crc;
+    }
 }
 
 WIMUConfig& WIMUConfig::operator = (const WIMUConfig& original){

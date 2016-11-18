@@ -32,7 +32,10 @@ SOURCES += main.cpp\
            BlueGiga\BLEDeviceContext.cpp \
            BlueGiga\callbacks.cpp \
            BlueGiga\cmd_def.c \
-           wimu_ble_driver.cpp
+           wimu_ble_driver.cpp \
+           datatreeitem.cpp \
+           wimuprocessor.cpp \
+           wimufile.cpp
 
 HEADERS  += mainwindow.h \
             wimuconfigdialog.h \
@@ -50,7 +53,10 @@ HEADERS  += mainwindow.h \
             BlueGiga\BLEDeviceContext.h \
             BlueGiga\cmd_def.h \
             BlueGiga\apitypes.h \
-            wimu_ble_driver.h
+            wimu_ble_driver.h \
+            datatreeitem.h \
+            wimuprocessor.h \
+            wimufile.h
 
 FORMS    += mainwindow.ui \
             wimuconfigdialog.ui \

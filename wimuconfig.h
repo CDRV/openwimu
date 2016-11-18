@@ -74,6 +74,7 @@ private:
     qint32 crc;
 
 public:
+    explicit WIMUConfig(quint8 hw_id, QObject *parent = 0);
     explicit WIMUConfig(QObject *parent = 0);
     WIMUConfig(const WIMUConfig &copy, QObject *parent=0);
 
@@ -114,6 +115,8 @@ public:
     WIMUConfig_GyroOptions      gyro;              // Gyro options
     WIMUConfig_MagOptions       magneto;           // Magneto options
     WIMUConfig_IMUOptions       imu;               // IMU options
+
+    quint8  m_hwId;
 
 signals:
 

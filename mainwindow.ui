@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>720</width>
-    <height>632</height>
+    <height>651</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -159,7 +159,7 @@ QListWidget::item:selected {color:black;}</string>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="txtPath">
+          <widget class="QComboBox" name="cmbPath">
            <property name="sizePolicy">
             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -172,12 +172,25 @@ QListWidget::item:selected {color:black;}</string>
              <height>25</height>
             </size>
            </property>
+           <property name="editable">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="btnBrowse">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>24</height>
+            </size>
+           </property>
            <property name="text">
             <string>Parcourir...</string>
+           </property>
+           <property name="icon">
+            <iconset resource="wimustudio2.qrc">
+             <normaloff>:/icons/images/load.png</normaloff>:/icons/images/load.png</iconset>
            </property>
           </widget>
          </item>
@@ -322,7 +335,7 @@ QListWidget::item:selected {color:black;}</string>
          </size>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="pgDisk">
          <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -340,6 +353,18 @@ QListWidget::item:selected {color:black;}</string>
           </property>
           <item>
            <widget class="QTreeWidget" name="treeDisk">
+            <property name="cursor" stdset="0">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="indentation">
+             <number>10</number>
+            </property>
             <attribute name="headerVisible">
              <bool>false</bool>
             </attribute>

@@ -31,8 +31,11 @@ WIMUConfigDialog::WIMUConfigDialog(QWidget *parent) :
 
     // Set default states
     initUIState();
-    WIMUConfig default_config;
+    WIMUConfig default_config(3);
     loadFromConfig(&default_config);
+
+    ui->chkDateTimeAutoOffset->setVisible(false); // Always hide that option for now..
+    ui->chkDateTimeAutoOffset->setChecked(false);
 
     // Start clock timer
     connect(&m_clock,SIGNAL(timeout()),this,SLOT(clockUpdate()));
@@ -171,7 +174,7 @@ void WIMUConfigDialog::manageCheckBoxClicked(){
     if (check){
         if (check->objectName()=="chkDateTimeGPS"){
             ui->lblDateTimeGPSWarning->setVisible(check->isChecked());
-            ui->chkDateTimeAutoOffset->setVisible(check->isChecked());
+            //ui->chkDateTimeAutoOffset->setVisible(check->isChecked());
             ui->lblDateTimeOffset->setVisible(!ui->chkDateTimeAutoOffset->isChecked() || !check->isChecked());
             ui->spinDateTimeOffset->setVisible(!ui->chkDateTimeAutoOffset->isChecked() || !check->isChecked());
         }
@@ -278,7 +281,7 @@ void WIMUConfigDialog::connectGeneralUISignals(){
 void WIMUConfigDialog::buttonDefaultClicked(){
     //TODO: Message box to confirm
 
-    WIMUConfig default_config;
+    WIMUConfig default_config(3);
     loadFromConfig(&default_config);
 }
 
@@ -292,7 +295,7 @@ void WIMUConfigDialog::buttonSaveConfigClicked(){
     if (filename.isEmpty())
         return;
 
-    WIMUConfig config;
+    WIMUConfig config(3);
     saveToConfig(&config);
 
     if (config.saveToFile(filename)){
@@ -313,7 +316,7 @@ void WIMUConfigDialog::buttonLoadConfigClicked(){
     if (filename.isEmpty())
         return;
 
-    WIMUConfig config;
+    WIMUConfig config(3);
 
     if (config.loadFromFile(filename)){
         loadFromConfig(&config);
@@ -360,7 +363,7 @@ void WIMUConfigDialog::buttonWriteSettingsClicked(){
 
 void WIMUConfigDialog::buttonWriteConfigClicked(){
     // Pack data
-    WIMUConfig config;
+    WIMUConfig config(3);
     saveToConfig(&config);
 
     QByteArray data = config.serialize();
@@ -698,6 +701,7 @@ void WIMUConfigDialog::sendDataToWIMU(QByteArray data, WIMUUSBDriver::WIMUComman
 
 void WIMUConfigDialog::wimuPortAboutToClose(){
     ui->btnConnect->setText(tr("Connecter"));
+    ui->btnConnect->setChecked(false);
     ui->lblStatus->setText(tr("Aucune connexion établie"));
     ui->lblStatus->setStyleSheet("QLabel{color:black;}");
     ui->frameConnected->setVisible(false);
@@ -733,6 +737,10 @@ void WIMUConfigDialog::wimuPortDataReady(){
 void WIMUConfigDialog::wimuPortError(QSerialPort::SerialPortError error){
     Q_UNUSED(error)
     QMessageBox::warning(this,"Erreur COM", "Une erreur est survenue dans la communication: \n" + m_wimuDriver.comGetErrorString());
+
+    m_wimuDriver.wimuDisconnect();
+
+
 }
 
 void WIMUConfigDialog::clockUpdate(){

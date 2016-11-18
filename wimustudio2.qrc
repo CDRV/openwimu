@@ -51,6 +51,16 @@
         <file>images/battery100.png</file>
         <file>images/battery100_charge.png</file>
         <file>images/wimu.png</file>
+        <file>images/date_green.png</file>
+        <file>images/date_red.png</file>
+        <file>images/date_yellow.png</file>
+        <file>images/experiment_green.png</file>
+        <file>images/experiment_red.png</file>
+        <file>images/experiment_yellow.png</file>
+        <file>images/patient_green.png</file>
+        <file>images/patient_red.png</file>
+        <file>images/patient_yellow.png</file>
+        <file>images/folder_red.png</file>
     </qresource>
     <qresource prefix="/3d">
         <file>images/WIMU3D.obj</file>

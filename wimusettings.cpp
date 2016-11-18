@@ -1,6 +1,7 @@
 #include "wimusettings.h"
 
 #include <QDataStream>
+#include <QFile>
 
 WIMUSettings::WIMUSettings(QObject *parent) : QObject(parent)
 {
@@ -72,15 +73,39 @@ QByteArray WIMUSettings::serialize(){
     return bytes;
 }
 
+bool WIMUSettings::loadFromFile(QString filename){
+    QFile in_file;
+    in_file.setFileName(filename);
+
+    if (!in_file.open(QFile::ReadOnly)){
+        return false;
+    }
+
+    QByteArray data = in_file.readAll();
+    in_file.close();
+
+    unserialize(&data);
+
+    return true;
+}
+
 void WIMUSettings::unserialize(QByteArray* data){
     QDataStream ds(*data);
     ds.setByteOrder(QDataStream::LittleEndian);
 
     ds >> id;
     ds >> hw_id;
-    ds >> version_major;
-    ds >> version_minor;
-    ds >> version_rev;
+
+    if (hw_id==3){
+        ds >> version_major;
+        ds >> version_minor;
+        ds >> version_rev;
+    }else{
+        // WIMUv2
+        version_major = 2;
+        version_minor = 0;
+        version_rev = 0;
+    }
 
     for (int i=0; i<3; i++)
         ds >> acc_gain[i];
@@ -94,6 +119,14 @@ void WIMUSettings::unserialize(QByteArray* data){
         ds >> mag_gain[i];
     for (int i=0; i<3; i++)
         ds >> mag_offset[i];
+
+    if (hw_id==2){
+        //WIMUv2 unused bytes
+        quint8 old_byte;
+        for (int i=0; i<7; i++){
+            ds >> old_byte;
+        }
+    }
     ds >> crc;
 }
 

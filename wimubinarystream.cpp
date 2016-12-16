@@ -47,6 +47,16 @@ quint16 WIMUBinaryStream::fromBinaryStream(QByteArray &stream){
     return datalen + 4;
 }
 
+quint16 WIMUBinaryStream::fromBinaryFile(QByteArray &stream, WIMU::Modules_ID module){
+    m_idModule = module;
+
+    m_data = stream;
+
+    // TODO: Specific things for modules??
+
+    return stream.length();
+}
+
 WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
     WIMU::IMUFrame_Struct frame;
     frame.frame_num=0;
@@ -137,11 +147,11 @@ QByteArray WIMUBinaryStream::getGPSMessagePayload(){
     // Find sync bytes
     qint8 start_pos=-1, end_pos=-1;
     for (int i=0; i<m_data.count()-1; i++){
-        if ((quint8)m_data.at(i)==0xA0 && (quint8)m_data.at(i+1)==0xA2){
+        if ((quint8)m_data.at(i)==0xA0 && (quint8)m_data.at(i+1)==0xA2 && start_pos==-1){
             // Found start sequence
             start_pos = i+2; // Ignore sync bytes
         }
-        if ((quint8)m_data.at(i)==0xB0 && (quint8)m_data.at(i+1)==0xB3){
+        if ((quint8)m_data.at(i)==0xB0 && (quint8)m_data.at(i+1)==0xB3  && end_pos==-1){
             // Found end sequence
             end_pos = i-2; // Remove checksum... for now!
         }
@@ -223,7 +233,7 @@ WIMU::GPSNavData_Struct WIMUBinaryStream::convertToGPSNavData(){
     ds >> minutes;
     ds >> num16;
     seconds = num16 / 1000;
-    nav.nav_datetime = QDateTime(QDate(year,month,day),QTime(hour,minutes,seconds));
+    nav.nav_datetime = QDateTime(QDate(year,month,day),QTime(hour,minutes,seconds),Qt::UTC);
 
     ds >> nav.nav_sat_ids; // Bit map of satellites in view used
 

@@ -1,5 +1,7 @@
 #include "wimufile.h"
 #include <QDebug>
+#include "wimubinarystream.h"
+
 
 WIMUFile::WIMUFile(QString filename, WIMU::Modules_ID file_type, WIMUSettings settings, WIMUConfig config, QObject *parent) :
     QObject(parent),
@@ -9,30 +11,60 @@ WIMUFile::WIMUFile(QString filename, WIMU::Modules_ID file_type, WIMUSettings se
     m_settings(settings)
 {
 
+    m_lastGPSTime = 0;
 }
 
 WIMUFile::~WIMUFile(){
-    if (m_file.isOpen())
-        m_file.close();
+    /*if (m_file.isOpen())
+        m_file.close();*/
+    if (m_fileBuffer.isOpen())
+        m_fileBuffer.close();
+    m_samples.clear();
+
 }
 
-bool WIMUFile::openFile(){
+bool WIMUFile::load(){
+    QFile file;
     // Load data from file
-    m_file.setFileName(m_filename);
-    return m_file.open(QIODevice::ReadWrite);
+    file.setFileName(m_filename);
+    /*if (m_filetype!=WIMU::MODULE_GPS)
+        return m_file.open(QIODevice::ReadWrite);*/
+
+    // Use an internal buffer for improved speed - files are kept small, so should be OK for memory usage
+    if (file.open(QIODevice::ReadOnly)){
+        m_fileBuffer.buffer() = file.readAll();
+        file.close();
+        m_fileBuffer.open(QIODevice::ReadOnly);
+
+        // Build samples list
+        if (m_filetype==WIMU::MODULE_GPS){
+            fillSamplesList(m_fileBuffer.buffer());
+        }
+
+
+        return true;
+    }
+    return false;
 }
 
-void WIMUFile::closeFile(){
-    m_file.close();
+void WIMUFile::close(){
+    //m_file.close();
+    m_fileBuffer.buffer().clear();
+    m_fileBuffer.close();
+    m_samples.clear();
 }
 
 quint64 WIMUFile::getStartTime(){
     quint64 rval = 0;
 
-    if (m_file.isOpen()){
-        m_file.seek(0); // Move to beginning of file
-        QByteArray data = readSample();
-        rval = getSampleTime(&data);
+    if (m_filetype!=WIMU::MODULE_GPS){
+        if (m_fileBuffer.isOpen()){
+            m_fileBuffer.seek(0); // Move to beginning of file
+            QByteArray data = readSample();
+            rval = getSampleTime(&data);
+        }
+    }else{
+        qDebug() << "GPS - getStartTime() not available yet!";
     }
     return rval;
 }
@@ -40,10 +72,14 @@ quint64 WIMUFile::getStartTime(){
 quint64 WIMUFile::getEndTime(){
     quint64 rval = 0;
 
-    if (m_file.isOpen()){
-        m_file.seek(m_file.size()-getSampleSize()); // Move to last sample in file
-        QByteArray data = readSample();
-        rval = getSampleTime(&data);
+    if (m_filetype!=WIMU::MODULE_GPS){
+        if (m_fileBuffer.isOpen()){
+            m_fileBuffer.seek(m_fileBuffer.size()-getSampleSize()); // Move to last sample in file
+            QByteArray data = readSample();
+            rval = getSampleTime(&data);
+        }
+    }else{
+        qDebug() << "GPS - getEndTime() not available yet!";
     }
     return rval;
 }
@@ -51,12 +87,16 @@ quint64 WIMUFile::getEndTime(){
 QList<quint32> WIMUFile::getTimeVector(){
     QList<quint32> rval;
 
-    if (m_file.isOpen()){
-        m_file.seek(0);
-        while (!m_file.atEnd()){
-            QByteArray data = readSample();
-            rval.append(getSampleTime(&data));
+    if (m_filetype!=WIMU::MODULE_GPS){
+        if (m_fileBuffer.isOpen()){
+            m_fileBuffer.seek(0);
+            while (!m_fileBuffer.atEnd()){
+                QByteArray data = readSample();
+                rval.append(getSampleTime(&data));
+            }
         }
+    }else{
+        //TODO... if needed!!
     }
 
     return rval;
@@ -66,10 +106,33 @@ QByteArray WIMUFile::readSample(){
     QByteArray rval;
 
     // Read a sample from the current position in file
-    quint16 size = getSampleSize();
+    if (m_filetype!=WIMU::MODULE_GPS){
+        if (m_filetype!=WIMU::MODULE_CPU){
+            quint16 size = getSampleSize();
 
-    if (size>0){
-        rval = m_file.read(size);
+            if (size>0){
+                rval = m_fileBuffer.read(size);
+            }
+        }else{
+            // LOG File = read a whole line
+            rval = m_fileBuffer.readLine();
+        }
+    }else{
+        // Check if message is valid
+        if (m_currentIndex < m_samples.count()){
+            QByteArray * sample = &m_samples[m_currentIndex++];
+            if ((quint8)sample->at(0)==0xA0 && (quint8)sample->at(1)==0xA2 &&
+                (quint8)sample->at(sample->count()-2)==0xB0 && (quint8)sample->at(sample->count()-1)==0xB3){
+                rval = *sample;
+            }else{
+                //qDebug() << "Invalid GPS message";
+                //rval.clear(); // Invalid message
+                rval = *sample; // In order not to end processing now...
+            }
+        }else{
+            //qDebug() << "Attempting to read a sample out of bounds.";
+        }
+
     }
 
     return rval;
@@ -106,6 +169,9 @@ quint16 WIMUFile::getSampleSize(){
             size = (4 + m_config.general.sampling_rate * 3 * 2);
         }
         break;
+    case WIMU::MODULE_CPU:
+        // LOG file - variable sample size
+        break;
     default:
         break;
     }
@@ -116,12 +182,27 @@ quint16 WIMUFile::getSampleSize(){
 
 quint32 WIMUFile::getSampleTime(QByteArray *data){
     quint32 rval = 0;
+    if (m_filetype!=WIMU::MODULE_GPS){
+        if (data->count()>4){
+            rval = (((quint32)data->at(3)) << 24) & 0xff000000;
+            rval |= (((quint32)data->at(2)) << 16) & 0x00ff0000;
+            rval |= (((quint32)data->at(1)) << 8) & 0x0000ff00;
+            rval |= ((quint32)data->at(0)) & 0x000000ff;
+        }
+    }else{
+        // Check if this is a frame containing time to update time, otherwise, return last valid one
+        if (data->count()>5){
+            if (data->at(4)==41 && data->count() >= 23){ // Geodetic Navigation Data
+                WIMUBinaryStream stream;
+                if (stream.fromBinaryFile(*data,WIMU::MODULE_GPS)>0){
+                    WIMU::GPSNavData_Struct nav = stream.convertToGPSNavData();
+                    if (nav.nav_datetime.isValid())
+                        m_lastGPSTime = nav.nav_datetime.toMSecsSinceEpoch() / 1000;
+                }
 
-    if (data->count()>4){
-        rval = (((quint32)data->at(3)) << 24) & 0xff000000;
-        rval |= (((quint32)data->at(2)) << 16) & 0x00ff0000;
-        rval |= (((quint32)data->at(1)) << 8) & 0x0000ff00;
-        rval |= ((quint32)data->at(0)) & 0x000000ff;
+            }
+        }
+        rval = m_lastGPSTime;
     }
 
     return rval;
@@ -155,18 +236,73 @@ WIMU::Modules_ID WIMUFile::getModuleFromPrefix(QString prefix){
     if (prefix=="POW")
         return WIMU::MODULE_POWER;
 
+    if (prefix=="LOG")
+        return WIMU::MODULE_CPU;
+
     // Default value
     return WIMU::MODULE_CPU;
 
 }
 
 qint64 WIMUFile::getCurrentPos(){
-    if (!m_file.isOpen())
-        return -1;
+    if (m_filetype!=WIMU::MODULE_GPS){
+        if (!m_fileBuffer.isOpen())
+            return -1;
 
-    return m_file.pos();
+        return m_fileBuffer.pos();
+    }else{
+        qint64 pos=0;
+        for (int i=m_currentIndex-1; i>=0; i--){
+            pos += m_samples.at(i).count();
+        }
+        return pos;
+    }
 }
 
-QFile* WIMUFile::getFilePtr(){
+/*QFile* WIMUFile::getFilePtr(){
     return &m_file;
+}*/
+
+QString WIMUFile::getFileName(){
+    return m_filename;
+}
+
+void WIMUFile::fillSamplesList(QByteArray& data){
+    // Fill the samples list from the ByteArray
+    if (m_filetype==WIMU::MODULE_GPS){
+        QList<QByteArray> samples = data.split((char)0xB3);
+        // Merge samples if needed
+        QByteArray new_sample;
+        for (int i=0; i<samples.count(); i++){
+            QByteArray* sample = &samples[i];
+            new_sample.append(*sample);
+            new_sample.append((char)0xB3); // Was filtered when splitting
+            /*if (new_sample.count()>=2){
+                if ((quint8)new_sample.at(0) != 0xA0 && (quint8)new_sample.at(1) != 0xA3){
+                    // Resync GPS message
+                    while(new_sample.count()>=2){
+                        new_sample = new_sample.right(new_sample.count()-2);
+                        if ((quint8)new_sample.at(0) == 0xA0 && (quint8)new_sample.at(1) == 0xA3){
+                            break;
+                        }
+                    }
+                    if ((quint8)new_sample.at(0) != 0xA0 && (quint8)new_sample.at(1) != 0xA3){
+                        new_sample.clear();
+                    }
+                }
+            }*/
+            if (new_sample.count()>=2){
+
+                if ((quint8)new_sample.at(new_sample.count()-2)==0xB0 &&
+                     (quint8)new_sample.at(new_sample.count()-1)==0xB3){
+                    m_samples.append(new_sample);
+                    new_sample.clear();
+                }
+            }
+        }
+
+        m_currentIndex = 0; // Reset sample index reader
+    }else{
+        qDebug() << "fillSamplesList - Not defined for that sensor type";
+    }
 }

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "WIMU Studio 2"
-#define MyAppVersion "2.0.1"
+#define MyAppVersion "2.0.2"
 #define MyAppPublisher "ESTRAD"
 #define MyAppURL "http://www.telereadaptation.com"
 #define MyAppExeName "WIMUStudio2.exe"

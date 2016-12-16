@@ -16,6 +16,7 @@ public:
     WIMU::Modules_ID getModuleID();
 
     quint16 fromBinaryStream(QByteArray& stream);
+    quint16 fromBinaryFile(QByteArray& stream, WIMU::Modules_ID module);
 
     // IMU
     WIMU::IMUFrame_Struct convertToIMUFrame();

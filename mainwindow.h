@@ -6,6 +6,8 @@
 #include <QDateTime>
 #include <QSettings>
 
+#include <QProgressDialog>
+
 #include "datatreeitem.h"
 
 #include "wimuconfigdialog.h"
@@ -45,6 +47,8 @@ private:
     DataTreeItem::DataType identifyFolderType(QFileInfo &folder);
     void loadFolders(QFileInfo &base_folder, DataTreeItem *base_item);
     void addItemToCorrectList(DataTreeItem* item);
+    void loadData(QString new_path, bool force_preprocess);
+    void updatePreprocessed();
 
     void loadAppSettings();
 
@@ -71,6 +75,8 @@ private:
     QList<DataTreeItem*>    m_listDatas;
     QList<DataTreeItem*>    m_listPatients;
 
+    QProgressDialog*        m_progDialog;
+
 
 
 private slots:
@@ -86,6 +92,9 @@ private slots:
     void clockUpdate();
 
     void usbConnect();
+
+    void initProgDialog(QString label, int min, int max);
+    void updateProgDialog(int value, QString label);
 
     // USB
     void btnUSBConnectClicked();
@@ -122,6 +131,8 @@ private slots:
 
     // Folders
     void btnBrowseClicked();
+    void btnReloadClicked();
+    void btnPreProcessClicked();
     void folderPathChanged(QString new_path);
 
 };

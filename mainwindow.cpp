@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 
 #include <QFileDialog>
-#include <QProgressDialog>
 #include <QStorageInfo>
 
 #include "wimuprocessor.h"
@@ -27,6 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_wimuBLEDriver = NULL;
     m_centralWidget = NULL;
     m_sensorDisplay = NULL;
+    m_progDialog = NULL;
     m_wimuDateTime = QDateTime();
     m_timeSyncRequested = false;
 
@@ -35,7 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->stkControls->setCurrentWidget(ui->pgEmpty);
     ui->wdgCentral->setLayout(new QVBoxLayout());
 
-    addToLog("Bienvenue dans le WIMU Studio 2! (Version 2.0.2)", WIMU::LogNormal);
+    addToLog("Bienvenue dans le WIMU Studio 2! (Version 2.0.3)", WIMU::LogNormal);
 
     connect(&m_clock,SIGNAL(timeout()),this,SLOT(clockUpdate()));
     connect(&m_connectTimer,SIGNAL(timeout()),this,SLOT(usbConnect()));
@@ -69,6 +69,9 @@ MainWindow::~MainWindow()
     delete m_appSettings;
 
     delete ui;
+
+    if (m_progDialog)
+        delete m_progDialog;
 }
 
 void MainWindow::connectButtonSignals(){
@@ -80,6 +83,8 @@ void MainWindow::connectButtonSignals(){
     connect(ui->btnBLEConnect,SIGNAL(clicked(bool)),this,SLOT(btnBLEDeviceConnectClicked()));
     connect(ui->btnBLERecord,SIGNAL(clicked(bool)),this,SLOT(btnBLERecordClicked()));
     connect(ui->btnBrowse,SIGNAL(clicked(bool)),this,SLOT(btnBrowseClicked()));
+    connect(ui->btnReload,SIGNAL(clicked(bool)),this,SLOT(btnReloadClicked()));
+    connect(ui->btnPreProcess,SIGNAL(clicked(bool)),this,SLOT(btnPreProcessClicked()));
 }
 
 void MainWindow::connectUSBSignals(){
@@ -206,6 +211,7 @@ void MainWindow::appSettingsRequested(){
 void MainWindow::updateToolsDisplay(){
     ui->cmbPath->setVisible(ui->btnDisk->isChecked());
     ui->btnBrowse->setVisible(ui->btnDisk->isChecked());
+    ui->btnReload->setVisible(ui->btnDisk->isChecked());
     ui->grpSources->updateGeometry();
     ui->lblBLERecNum->setVisible(ui->btnBLERecord->isChecked());
 }
@@ -841,9 +847,7 @@ void MainWindow::btnBrowseClicked(){
     }
 
 }
-
-void MainWindow::folderPathChanged(QString new_path){
-    //qDebug() << "PATH = " << new_path;
+void MainWindow::loadData(QString new_path, bool force_preprocess){
     clearFolderLists();
 
     QDir folder(new_path);
@@ -859,9 +863,13 @@ void MainWindow::folderPathChanged(QString new_path){
     // Get count of all base folders to estimate time & show progress dialog
     folder.setFilter(QDir::AllDirs | QDir::NoDotAndDotDot);
     quint16 folder_count = folder.count();
-    QProgressDialog prog("Chargement des données...","Annuler",0,folder_count*2,this);
-    prog.setWindowModality(Qt::WindowModal);
-    prog.setMinimumDuration(0);
+
+    if (m_progDialog){
+        delete m_progDialog;
+        m_progDialog = NULL;
+    }
+
+    initProgDialog("Chargement des données...",0,folder_count);
 
     // Get initial state of all data
     quint16 count=0;
@@ -884,79 +892,83 @@ void MainWindow::folderPathChanged(QString new_path){
         loadFolders(subfolder, current_item);
 
         count++;
-        prog.setValue(count);
-        if (prog.wasCanceled())
+        m_progDialog->setValue(count);
+        if (m_progDialog->wasCanceled())
             break;
         QCoreApplication::processEvents();
     }
 
-    // Now browse each item and try and determine if we need preprocessing or not
-    count = 0;
-    prog.setValue(0);
-    prog.setMaximum(m_listExperiments.count());
-    prog.setLabelText("Chargement des données déjà pré-traitées...");
-    QList<QString> toPreprocess;
-    foreach (current_item, m_listExperiments){
-        QDir current_folder(current_item->getPath());
-        current_folder.setSorting(QDir::Name | QDir::IgnoreCase | QDir::LocaleAware);
-        if (current_folder.entryList(QDir::AllDirs).contains("PreProcess",Qt::CaseInsensitive)){
-            current_item->setStatus(DataTreeItem::STATUS_COMPLETE);
-        }else{
-            // Flag for preprocessing
-            toPreprocess.append(current_item->getPath());
-        }
-
-        // Check if parent and, if so, check if all of its child are completed (to update status)
-        if (current_item->parent()){
-            quint16 completed_count=0;
-            quint16 inprogress_count=0;
-            for (int i=0; i<current_item->parent()->childCount(); i++){
-                if (((DataTreeItem*)current_item->parent()->child(0))->getStatus() == DataTreeItem::STATUS_COMPLETE){
-                    completed_count++;
-                }
-                if (((DataTreeItem*)current_item->parent()->child(0))->getStatus() == DataTreeItem::STATUS_INPROGRESS){
-                    inprogress_count++;
-                }
-            }
-
-            if (inprogress_count>0){
-                ((DataTreeItem*)(current_item->parent()))->setStatus(DataTreeItem::STATUS_INPROGRESS);
+    if (!m_progDialog->wasCanceled()){
+        // Now browse each item and try and determine if we need preprocessing or not
+        QList<QString> toPreprocess;
+        foreach (current_item, m_listExperiments){
+            QDir current_folder(current_item->getPath());
+            current_folder.setSorting(QDir::Name | QDir::IgnoreCase | QDir::LocaleAware);
+            //qDebug() << current_item->getPath();
+            if (!force_preprocess && current_folder.entryList(QDir::AllDirs).contains("PreProcess",Qt::CaseInsensitive)){
+                //qDebug() << "PreProcessed: " << current_item->getPath();
+                current_item->setStatus(DataTreeItem::STATUS_COMPLETE);
             }else{
-                if (completed_count==current_item->parent()->childCount())
-                    ((DataTreeItem*)(current_item->parent()))->setStatus(DataTreeItem::STATUS_COMPLETE);
+                // Flag for preprocessing
+                //qDebug() << "ToPreprocess: " << current_item->getPath();
+                toPreprocess.append(current_item->getPath());
             }
+
+            // Update progress
+            if (m_progDialog->wasCanceled())
+                break;
+            QCoreApplication::processEvents();
         }
 
-        // Update progress
-        count++;
-        prog.setValue(count);
-        if (prog.wasCanceled())
-            break;
-        QCoreApplication::processEvents();
-    }
+        if (!m_progDialog->wasCanceled()){
 
+            if (!toPreprocess.isEmpty()){
+                //qDebug() << toPreprocess;
+                // We have some preprocessing to do!
+                // Check if we are on a removable media before doing preprocessing
+                QStorageInfo storage(new_path);
+                if (QString(storage.fileSystemType())=="FAT"){
+                    int confirm = QMessageBox::question(this,"Pré-traitement des données","Les données semblent se trouver sur un disque externe.\n\nIl n'est pas recommandé de les pré-traiter directement sur ce disque.\nDésirez-vous tout de même poursuivre?",QMessageBox::Yes,QMessageBox::No);
+                    if (confirm==QMessageBox::No){
+                        // Clear list
+                        toPreprocess.clear();
+                    }
+                }
 
-    if (!toPreprocess.isEmpty()){
-        // We have some preprocessing to do!
-        // Check if we are on a removable media before doing preprocessing
-        QStorageInfo storage(new_path);
-        if (QString(storage.fileSystemType())=="FAT"){
-            int confirm = QMessageBox::question(this,"Pré-traitement des données","Les données semblent se trouver sur un disque externe.\n\nIl n'est pas recommandé de les pré-traiter directement sur ce disque.\nDésirez-vous tout de même poursuivre?",QMessageBox::Yes,QMessageBox::No);
-            if (confirm==QMessageBox::No){
-                // Clear list
-                toPreprocess.clear();
+                // Start preprocessing...
+                QString current_path;
+                WimuProcessor processor(this);
+                connect(&processor, SIGNAL(requestLogging(QString,WIMU::LogTypes)),this,SLOT(addToLog(QString,WIMU::LogTypes)));
+                connect(&processor, SIGNAL(requestProgressUpdate(int,QString)),this,SLOT(updateProgDialog(int,QString)));
+                connect(&processor, SIGNAL(requestProgressInit(QString,int,int)),this,SLOT(initProgDialog(QString,int,int)));
+                connect(m_progDialog, SIGNAL(canceled()),&processor,SLOT(cancelRequested()));
+
+                addToLog("Pré-traitement des données...",WIMU::LogInfo);
+                //setEnabled(false);
+                //ui->txtLog->setEnabled(true);
+                foreach (current_path, toPreprocess){
+                    processor.preProcess(current_path);
+                    if (m_progDialog->wasCanceled())
+                        break;
+                }
+                //setEnabled(true);
+
+                processor.disconnect();
             }
-        }
 
-        // Start preprocessing...
-        QString current_path;
-        WimuProcessor processor(this);
-        connect(&processor, SIGNAL(requestLogging(QString,WIMU::LogTypes)),this,SLOT(addToLog(QString,WIMU::LogTypes)));
-        foreach (current_path, toPreprocess){
-            processor.preProcess(current_path);
+            // Update tree items to display "dates" instead of folders
+            updatePreprocessed();
+
+            addToLog("Pré-traitement terminé!",WIMU::LogInfo);
         }
-        processor.disconnect();
     }
+    m_progDialog->deleteLater();
+    m_progDialog = NULL;
+}
+
+void MainWindow::folderPathChanged(QString new_path){
+    //qDebug() << "PATH = " << new_path;
+    loadData(new_path, false);
 
 }
 
@@ -967,10 +979,45 @@ DataTreeItem::DataType MainWindow::identifyFolderType(QFileInfo& folder){
         data_type = DataTreeItem::DATA_EXPERIMENT;
     }else{
         // Check if it contains something else
-        if (!QDir(folder.filePath()).entryList(QStringList("*.DAT"),QDir::AllEntries).empty()){
+        if (!QDir(folder.filePath()).entryList(QStringList("LOG.DAT"),QDir::AllEntries).empty()){
             data_type = DataTreeItem::DATA_DATA;
+        }else{
+            if (QDir(folder.filePath()).entryList(QDir::AllDirs).contains("PreProcess",Qt::CaseInsensitive)){
+                // Experiment
+                data_type = DataTreeItem::DATA_EXPERIMENT;
+            }else{
+                // If all folders can be converted to numbers, we have an experiment folder
+                int count=0;
+                bool ok;
+                QStringList dirs = QDir(folder.filePath()).entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+                foreach (QString dir, dirs){
+
+
+                    dir.toInt(&ok);
+                    if (ok)
+                        count++;
+                    else{
+                        if (dir.contains("Process"))
+                            count++; // Always count that folder as OK
+                        else
+                            break; // Abord as we have at least a non-ok folder
+                    }
+                }
+
+                if (dirs.count() >0 && count==dirs.count()){
+                    data_type = DataTreeItem::DATA_EXPERIMENT;
+                }
+            }
         }
     }
+
+
+
+
+
+
+
+    //qDebug() << "Unknown type: " << folder.completeBaseName();
     return data_type;
 }
 
@@ -992,12 +1039,18 @@ void MainWindow::loadFolders(QFileInfo &base_folder, DataTreeItem* base_item){
                                         data_type,
                                         DataTreeItem::STATUS_INCOMPLETE,
                                         subFolder.absoluteFilePath());
+
         base_item->addChild(current_item);
         addItemToCorrectList(current_item);
 
         // If we have an experiment, parent is a patient
         if (data_type==DataTreeItem::DATA_EXPERIMENT){
             base_item->setDataType(DataTreeItem::DATA_PATIENT);
+        }
+
+        // If we have a data, the parent is an experiment
+        if (data_type==DataTreeItem::DATA_DATA){
+            base_item->setDataType(DataTreeItem::DATA_EXPERIMENT);
         }
 
        // Next level
@@ -1026,6 +1079,131 @@ void MainWindow::addItemToCorrectList(DataTreeItem* item){
         m_listPatients.append(item);
         break;
     default:
+
         break;
+    }
+}
+
+void MainWindow::updatePreprocessed(){
+    // Browse all data in the list and change them if they have been preprocessed...
+    for (int i=0; i<m_listExperiments.count(); i++){
+        QDir folder(m_listExperiments.at(i)->getPath());
+        if (folder.entryList().contains("PreProcess",Qt::CaseInsensitive)){
+            folder.setPath(m_listExperiments.at(i)->getPath() + "/PreProcess");
+            // We have preprocessed data for that experiment, remove all "data" for that experiment
+            QList<DataTreeItem*> childs;
+            for (int j=0; j<m_listExperiments.at(i)->childCount(); j++){
+                childs.append((DataTreeItem*)m_listExperiments.at(i)->child(j));
+
+            }
+            foreach (DataTreeItem* toremove,childs){
+                m_listDatas.removeAll(toremove);
+                m_listExperiments.at(i)->removeChild(toremove);
+            }
+
+            // Check if we have corrected days for that data set and adjust status accordingly
+            DataTreeItem::DataStatus status = DataTreeItem::STATUS_COMPLETE;
+            QList<quint32> corrected_indexes;
+            QFile cor_file(folder.path() + "/corrected.txt");
+            if (cor_file.exists()){
+                status = DataTreeItem::STATUS_INPROGRESS;
+                if (cor_file.open(QIODevice::ReadOnly)){
+                    QTextStream stream(&cor_file);
+                    QString line;
+                    while (!cor_file.atEnd()){
+                        stream >> line;
+                        corrected_indexes.append(line.toUInt());
+                    }
+                    cor_file.close();
+                 }
+            }
+
+            // Rebuild the datas with the dates instead of the folders
+            QStringList logs = folder.entryList(QStringList("LOG_*.DAT"));
+            WimuProcessor::sortFolderList(logs);
+
+            foreach (QString log, logs){
+                QFileInfo info(folder.path() + "/" + log);
+                QString label = info.lastModified().date().toString("dd-MM-yyyy");
+                DataTreeItem* current_item = new DataTreeItem(label,
+                                                DataTreeItem::DATA_DATA,
+                                                DataTreeItem::STATUS_COMPLETE,
+                                                folder.path());
+
+                // Check if that data was corrected or not
+                if (!corrected_indexes.isEmpty()){
+                    // Get day ID
+                    QStringList split = log.split("_");
+                    if (split.count()>1){
+                        split = split.at(1).split(".");
+                        if (split.count()>=1){
+                            if (corrected_indexes.contains(split.at(0).toUInt())){
+                                current_item->setStatus(DataTreeItem::STATUS_INPROGRESS);
+                            }
+                        }
+                    }
+                }
+
+                m_listExperiments.at(i)->addChild(current_item);
+                addItemToCorrectList(current_item);
+            }
+
+            // Ensure experiment icon is correct
+            m_listExperiments.at(i)->setStatus(status);
+
+        }
+        DataTreeItem* current_item = m_listExperiments.at(i);
+        if (current_item->parent()){
+            quint16 completed_count=0;
+            quint16 inprogress_count=0;
+            for (int i=0; i<current_item->parent()->childCount(); i++){
+                if (((DataTreeItem*)current_item->parent()->child(i))->getStatus() == DataTreeItem::STATUS_COMPLETE){
+                    completed_count++;
+                }
+                if (((DataTreeItem*)current_item->parent()->child(i))->getStatus() == DataTreeItem::STATUS_INPROGRESS){
+                    inprogress_count++;
+                }
+            }
+
+            //qDebug() << current_item->parent()->text(0) << " = " << current_item->parent()->childCount();
+            if (inprogress_count>0){
+                ((DataTreeItem*)(current_item->parent()))->setStatus(DataTreeItem::STATUS_INPROGRESS);
+            }else{
+                if (completed_count==current_item->parent()->childCount())
+                    ((DataTreeItem*)(current_item->parent()))->setStatus(DataTreeItem::STATUS_COMPLETE);
+            }
+        }
+    }
+}
+
+void MainWindow::btnReloadClicked(){
+    ui->txtLog->clear();
+    loadData(ui->cmbPath->currentText(),false);
+}
+
+void MainWindow::btnPreProcessClicked(){
+    ui->txtLog->clear();
+    loadData(ui->cmbPath->currentText(),true);
+}
+
+void MainWindow::initProgDialog(QString label, int min, int max){
+    if (!m_progDialog)
+        m_progDialog = new QProgressDialog(label,"Annuler",min,max,this);
+    else{
+        m_progDialog->setLabelText(label);
+        m_progDialog->setMinimum(min);
+        m_progDialog->setMaximum(max);
+        m_progDialog->setValue(0);
+    }
+
+    m_progDialog->setWindowModality(Qt::WindowModal);
+    m_progDialog->setMinimumDuration(0);
+}
+
+void MainWindow::updateProgDialog(int value, QString label){
+    if (m_progDialog){
+        m_progDialog->setValue(value);
+        if (!label.isEmpty())
+            m_progDialog->setLabelText(label);
     }
 }

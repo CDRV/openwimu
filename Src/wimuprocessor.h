@@ -38,7 +38,7 @@ private:
     bool writeDataFile(QString path, QString sensor, qint16 day, QString src_filename, const qint64 start_pos, const qint64 end_pos, const quint32 &mod_ts);
     bool writeGPSHeaderFile(QString path, qint16 day, const quint32 &mod_ts);
     bool writeGPSCSVFile(QString path, qint16 day, QList<WIMU::GPSNavData_Struct> &gps_data, const quint32 &mod_ts);
-    bool copyGPSCSVFile(QString src, QString dst, const quint32 &mod_ts);
+    bool copyFile(QString src, QString dst, const quint32 &mod_ts);
     void setFileModificationTime(const QString& filename, quint32 ts);
 
     QStringList getSensorList(const QString& path);

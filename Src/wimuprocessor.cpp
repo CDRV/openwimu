@@ -355,9 +355,9 @@ void WimuProcessor::correctTimestamp(QString path){
     if (m_cancel)
         return;
 
-    file_prefixes.clear();
+    /*file_prefixes.clear();
     file_prefixes.append("LOG");
-    file_prefixes.append("POW");
+    file_prefixes.append("POW");*/
 
     //////////////////////////////////////////////////////////////////////
     // Step 6. Create all empty files required for those days and sensors
@@ -717,6 +717,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
     QList<quint32>              data_ends;      // Timestamp where data ends in that folder
 
     sortFolderList(folders);
+    QList<quint16> to_remove;
     for (i=0; i<folders.count(); i++){
         QDir ppFolder(path + "/" + folders.at(i) + "/PreProcess");
 
@@ -771,8 +772,8 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                 timefile.close();
 
                 // Create dates for each date between start and end
-                for (quint32 i=data_starts.last();i<data_ends.last(); i+=86400){
-                    QDateTime data_date = QDateTime(QDateTime::fromSecsSinceEpoch(i,Qt::LocalTime).date());
+                for (quint32 j=data_starts.last();j<data_ends.last(); j+=86400){
+                    QDateTime data_date = QDateTime(QDateTime::fromSecsSinceEpoch(j,Qt::LocalTime).date());
                     //data_date = previousMidnight(data_date);
                     if (!dates.contains(data_date)){
                         //qDebug() << "Adding " << data_date;
@@ -780,8 +781,19 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                     }
                 }
             }
+        }else{
+            // No preprocess folder - remove from folder list...
+            to_remove.append(i);
         }
     }
+
+    // Clear "bad" folders
+    //qDebug() << folders;
+    for (int i=to_remove.count()-1; i>=0; i--){
+        folders.removeAt(to_remove.at(i));
+    }
+    //qDebug() << folders;
+    to_remove.clear();
 
     // Check if we have a least a valid date in the list (i.e. not one set in the 1970s)...
     bool hasValidDate = false;
@@ -795,14 +807,14 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
     if (!hasValidDate){
         emit requestLogging("Aucune date valide n'a été trouvée dans ces données.", WIMU::LogWarning);
         // Remove "1969" dates if present
-        QList<quint16> to_remove;
+
         for (int i=0; i<dates.count(); i++){
             if (dates.at(i).date().year()<1970){
                 to_remove.append(i);
             }
         }
 
-        for (int i=0; i<to_remove.count(); i++){
+        for (int i=to_remove.count()-1; i>=0; i--){
             dates.removeAt(to_remove.at(i));
         }
         // "Upgrade" all dates to 2000 to prevent date errors
@@ -884,7 +896,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                 if (diff==2){ // We only have a missing day - assume the data will fit there
                     data_starts[i] = previousMidnight(data_starts.at(next_valid)) - 86400;//dates.at(next_valid).addDays(-1).toTime_t();
                     data_ends[i] = data_starts.at(i) + current_len;
-                    emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Insertion simple)",WIMU::LogWarning );
+                    emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Insertion simple)",WIMU::LogWarning );
                 }else{
                     int len1 = data_ends.at(prev_valid) - data_starts.at(prev_valid);
                     int len2 = data_ends.at(next_valid) - data_starts.at(next_valid);
@@ -893,23 +905,23 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                         int avail = 86400 - len1 - len2; // Available time in that day
                         data_starts[i] = data_ends[prev_valid] + (avail - current_len)/2;
                         data_ends[i] = data_starts[next_valid] - (avail - current_len)/2;
-                        emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Insertion même journée)",WIMU::LogWarning );
+                        emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Insertion même journée)",WIMU::LogWarning );
 
                     }else{
                         if (diff==1){ // Only one day difference - try to fit with the smallest dataset
                             if (len1>len2){
                                 data_starts[i] = data_starts[next_valid] -current_len - 5; // Suppose a 5 seconds delay from last time
                                 data_ends[i] = data_starts.at(i) + current_len;
-                                emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Insertion journée suivante)",WIMU::LogWarning );
+                                emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Insertion journée suivante)",WIMU::LogWarning );
                             }else{
                                 data_starts[i] = data_ends[prev_valid] + 5;
                                 data_ends[i] = data_starts.at(i) + current_len;
-                                emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Insertion journée précédente)",WIMU::LogWarning );
+                                emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Insertion journée précédente)",WIMU::LogWarning );
                             }
                         }else{ // More than one day - put it right in the middle!
                             data_starts[i] = previousMidnight(data_ends.at(prev_valid)) + (diff/2)*86400;//dates.at(prev_valid).addDays(diff/2).toTime_t();
                             data_ends[i] = data_starts.at(i) + current_len;
-                            emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Insertion au milieu du trou)",WIMU::LogWarning );
+                            emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Insertion au milieu du trou)",WIMU::LogWarning );
                         }
 
                     }
@@ -918,17 +930,17 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                 if (next_valid>=0 && prev_valid>=0){ // No next valid time - use previous valid
                     data_starts[i] = previousMidnight(data_ends[prev_valid]) + 86400; //dates.at(prev_valid).addDays(1).toTime_t();
                     data_ends[i] = data_starts.at(i) + current_len;
-                    emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Ajout après journée précédente)",WIMU::LogWarning );
+                    emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Ajout après journée précédente)",WIMU::LogWarning );
                 }else{
                     if (prev_valid>=0){
                         data_starts[i] = previousMidnight(data_starts[prev_valid]) -86400; //dates.at(next_valid).addDays(-1).toTime_t();
                         data_ends[i] = data_starts.at(i) + current_len;
-                        emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Ajout avant journée suivante)",WIMU::LogWarning );
+                        emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Ajout avant journée suivante)",WIMU::LogWarning );
                     }else{
                         if (next_valid>=0){
                             data_starts[i] = previousMidnight(data_starts[next_valid]) - (next_valid-i) * 86400;
                             data_ends[i] = data_starts.at(i) + current_len;
-                            emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromTime_t(data_ends.at(i)).toString("dd-MM-yyyy") + " (Ajout au début des données)",WIMU::LogWarning );
+                            emit requestLogging("Estimation de la date de " + path + "/" + folders.at(i) + " à " + QDateTime::fromSecsSinceEpoch(data_ends.at(i), Qt::UTC).toString("dd-MM-yyyy") + " (Ajout au début des données)",WIMU::LogWarning );
                         }else{
                             // No valid time at all!!
                             emit requestLogging("Impossible d'estimer la date de " + path + "/" + folders.at(i) + ": Aucune donnée valide - ajout suite aux autres données.",WIMU::LogWarning );
@@ -1045,6 +1057,32 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
     /////////////////////////////////////////////////////////////
     // Step 4. Create output folder
     /////////////////////////////////////////////////////////////
+
+    // Recreate dates list
+    // Create dates for each date between start and end, those might have changed from timestamp correction
+    //qDebug() << dates;
+    dates.clear();
+    // Find min and max times
+    quint32 start_time=std::numeric_limits<quint32>::max(), end_time=0;
+    for (int i=0; i<data_starts.count(); i++){
+        if (data_starts.at(i)<start_time)
+            start_time = data_starts.at(i);
+    }
+    for (int i=0; i<data_ends.count(); i++){
+        if (data_ends.at(i)>end_time)
+            end_time = data_ends.at(i);
+    }
+
+    for (quint32 j=start_time;j<=end_time+86400; j+=86400){
+        QDateTime data_date = QDateTime(QDateTime::fromSecsSinceEpoch(j,Qt::LocalTime).date());
+        //data_date = previousMidnight(data_date);
+        if (!dates.contains(data_date)){
+            //qDebug() << "Adding " << data_date;
+            dates.append(data_date);
+        }
+    }
+    //qDebug() << "---";
+    //qDebug() << dates;
     QDir folder(path);
 
     // Create PreProcess folder
@@ -1067,7 +1105,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
 
     // Create empty files for each dates and sensors
     QMap<qint16, QDate> fileDateMapping;
-    quint8 count = 0;
+    quint8 count = 1;
 
     // Create ordered list of dates without any holes
     QList<QDateTime> dates2;
@@ -1101,11 +1139,11 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
     dates2=dates3;
     dates3.clear();
 
-    for (i=0; i<dates2.count(); i++){
+    for (i=1; i<=dates2.count(); i++){ // File must start at "1" not "0"
        /* if (to_remove.contains(i))
             continue;*/
 
-        QDateTime current_date = dates2.at(i);//dates.first().addDays(i);
+        QDateTime current_date = dates2.at(i-1);//dates.first().addDays(i);
         if (!fileDateMapping.values().contains(current_date.date())){
             foreach(sensor,sensors){
                 // TIME file
@@ -1129,9 +1167,17 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
         }
     }
 
+    // Build correct order of folders (since some may have had timestamp changed and in wrong order...)
+    QList<quint32> data_starts2 = data_starts;
+    std::sort(data_starts2.begin(),data_starts2.end());
+    QList<quint32> folder_order;
+    for (i=0; i<data_starts2.count(); i++){
+        folder_order.append(data_starts.indexOf(data_starts2.at(i)));
+    }
+
     // Browse each folder and append to correct file
     for (i=0; i<folders.count(); i++){
-        QDir ppFolder(path + "/" + folders.at(i) + "/PreProcess");
+        QDir ppFolder(path + "/" + folders.at(folder_order.at(i)) + "/PreProcess");
 
 
         if (ppFolder.exists()){
@@ -1145,7 +1191,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                 QFileInfo finfo;
                 QDate last_mod;
                 for (int j=0; j<files.count(); j++){
-                    finfo.setFile(path + "/" + folders.at(i) + "/PreProcess/" + files.at(j));
+                    finfo.setFile(path + "/" + folders.at(folder_order.at(i)) + "/PreProcess/" + files.at(j));
                     last_mod = finfo.lastModified().date();
 
                     QList<quint32> ts;
@@ -1154,7 +1200,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                     //qDebug() << finfo.filePath() << last_mod << day_id;
                     if (day_id>=0){
                         if (readTimeFile(ppFolder.path(),sensor,j,ts)){
-                            writeTimeFile(path + "/PreProcess",sensor,day_id,ts,previousMidnight(finfo.lastModified().toTime_t()));
+                            writeTimeFile(path + "/PreProcess",sensor,day_id,ts,previousMidnight(finfo.lastModified().toSecsSinceEpoch()));
                         }
                     }else{
                         qDebug() << "*** Day not found??! " << last_mod;
@@ -1166,13 +1212,16 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                 files = ppFolder.entryList(QStringList(sensor + "_*.DAT"),QDir::Files);
                 sortFolderList(files);
                 for (int j=0; j<files.count(); j++){
-                    finfo.setFile(path + "/" + folders.at(i) + "/PreProcess/" + files.at(j));
+                    finfo.setFile(path + "/" + folders.at(folder_order.at(i)) + "/PreProcess/" + files.at(j));
                     last_mod = finfo.lastModified().date();
                     qint16 day_id = fileDateMapping.key(last_mod,-1);
-                   // qDebug() << finfo.filePath() << last_mod << day_id;
+                    //qDebug() << finfo.filePath() << last_mod << day_id;
                     //QFile src_file(finfo.filePath());
                     if (day_id>=0){
-                        writeDataFile(path + "/PreProcess",sensor,day_id,finfo.filePath(),0,0,previousMidnight(finfo.lastModified().toTime_t()));
+                        writeDataFile(path + "/PreProcess",sensor,day_id,finfo.filePath(),0,0,previousMidnight(finfo.lastModified().toSecsSinceEpoch()));
+                    }
+                    else{
+                        qDebug() << "*** Day not found??! " << last_mod;
                     }
                 }
 
@@ -1181,11 +1230,11 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                     files = ppFolder.entryList(QStringList("GPS_*.CSV"),QDir::Files);
                     sortFolderList(files);
                     for (int j=0; j<files.count(); j++){
-                        finfo.setFile(path + "/" + folders.at(i) + "/PreProcess/" + files.at(j));
+                        finfo.setFile(path + "/" + folders.at(folder_order.at(i)) + "/PreProcess/" + files.at(j));
                         last_mod = finfo.lastModified().date();
                         qint16 day_id = fileDateMapping.key(last_mod,-1);
                         if (day_id>=0){
-                            copyFile(finfo.filePath(), path + "/PreProcess/GPS_" + QString::number(day_id) + ".CSV",previousMidnight(finfo.lastModified().toTime_t()));
+                            copyFile(finfo.filePath(), path + "/PreProcess/GPS_" + QString::number(day_id) + ".CSV",previousMidnight(finfo.lastModified().toSecsSinceEpoch()));
                         }
                     }
                 }
@@ -1213,7 +1262,8 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
         // Convert corrected indexes from "folder" to "date"
         QList<quint8> corrected_days;
         for (int i=0; i<corrected_indexes.count(); i++){
-            quint8 new_index = fileDateMapping.key(previousMidnight(QDateTime::fromSecsSinceEpoch(data_starts.at(corrected_indexes.at(i)))).date());
+            //qDebug() << previousMidnight(QDateTime::fromSecsSinceEpoch(data_starts.at(corrected_indexes.at(i)), Qt::UTC));
+            quint8 new_index = fileDateMapping.key(previousMidnight(QDateTime::fromSecsSinceEpoch(data_starts.at(corrected_indexes.at(i)), Qt::UTC)).date());
             //if (!corrected_days.contains(new_index))
                 corrected_days.append(new_index);
         }
@@ -1340,7 +1390,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
         QByteArray sample;
         foreach(sensor, sensors){
 
-            QFile data_file(path + "/PreProcess/TIME_" + sensor + "_" + QString::number(i) + ".DAT");
+            QFile data_file(path + "/PreProcess/TIME_" + sensor + "_" + QString::number(fileDateMapping.keys().at(i)) + ".DAT");
             if (!data_file.open(QIODevice::ReadOnly)){
                 emit requestLogging("Impossible de lire le fichier " + data_file.fileName(),WIMU::LogError);
                 return;
@@ -1740,7 +1790,7 @@ QStringList WimuProcessor::getSensorList(const QString &path){
 }
 
 QDateTime WimuProcessor::previousMidnight(const QDateTime& time){
-   return QDateTime::fromTime_t((time.toTime_t() / 86400) * 86400);
+   return QDateTime::fromSecsSinceEpoch((time.toTime_t() / 86400) * 86400,Qt::UTC);
 }
 
 quint32 WimuProcessor::previousMidnight(const quint32 &time){

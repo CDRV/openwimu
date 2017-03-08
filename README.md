@@ -1,0 +1,2 @@
+# openwimu
+WIMU hardware platform

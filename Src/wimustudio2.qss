@@ -1,0 +1,14 @@
+QWidget{background-color:rgba(10,10,80,100%); color:white; border-radius:5px;border-style: outset; }
+
+QPushButton,QToolButton{border-width:3px;border-color:rgba(10,10,180,80%);
+		   background-color:  rgba(10,10,220,100%);}
+
+QPushButton:hover,QToolButton:hover{background-color: rgba(10,10,220,100%);}
+QPushButton:checked{background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba(10,10,220,100%), stop: 1 rgba(0,0,50,100%));
+			border-width:2px; border-style: inset;}
+
+QLineEdit{background-color:rgba(88,130,250,70%)}
+
+QGroupBox,QDockWidget{border:2px solid rgba(88,130,250,100%); }
+QGroupBox::title{ subcontrol-position: top left;  padding: 0px 3px; margin-top: -6px; color: #8258FA;}
+

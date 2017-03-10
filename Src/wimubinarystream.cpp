@@ -7,6 +7,7 @@ WIMUBinaryStream::WIMUBinaryStream(QObject *parent) : QObject(parent)
 {
     m_idModule = WIMU::MODULE_CPU;
     m_data.clear();
+    m_fromFile = false;
 }
 
 WIMUBinaryStream::WIMUBinaryStream(const WIMUBinaryStream &copy, QObject *parent) :
@@ -19,6 +20,8 @@ WIMUBinaryStream::WIMUBinaryStream(const WIMUBinaryStream &copy, QObject *parent
 quint16 WIMUBinaryStream::fromBinaryStream(QByteArray &stream){
     if (stream.count()<2)
         return 0;
+
+     m_fromFile = false;
 
     // Find the sync bytes
     for (int i=0; i<stream.count()-1; i++){
@@ -54,6 +57,8 @@ quint16 WIMUBinaryStream::fromBinaryFile(QByteArray &stream, WIMU::Modules_ID mo
 
     // TODO: Specific things for modules??
 
+    m_fromFile = true;
+
     return stream.length();
 }
 
@@ -87,13 +92,19 @@ WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
     return frame;
 }
 
-WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(){
+WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(WIMUConfig *config){
     WIMU::PowerFrame_Struct power;
     quint16 status;
     power.battery = 0;
+    WIMUConfig* current_config = config;
 
     if (m_idModule!=WIMU::MODULE_POWER)
         return power;
+
+    if (!config){
+        current_config = new WIMUConfig();
+        current_config->setDefaults();
+    }
 
     QDataStream ds(m_data);
     ds.setByteOrder(QDataStream::LittleEndian);
@@ -103,17 +114,36 @@ WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(){
     ds >> power.raw_battery;
     ds >> status;
 
-    power.status = ((WIMU::PowerStates)(status & 0x7F));
-    power.charging = (status & 0x80) > 0;
+    // WIMU2
+    if (current_config->hwId==2){
+        power.status = WIMU::POWER_STATE_UNKNOWN; // No power state in this version
+        power.charging = false;
 
-    // Compute battery voltage
-    power.battery = (float)power.raw_battery / 100.f; //(3.3f / 1024) * (float)power.raw_battery / 2;
-    power.battery_pc = qMin((quint8)100, (quint8)((power.battery-3.3) / (3.7f-3.3f) * 100));
+        // Compute battery voltage
+       /* power.battery = current_config->convertBatt2volt(power.raw_battery);
+        power.battery_pc = qMin((quint8)100, (quint8)((power.battery-3.3) / (3.7f-3.3f) * 100));*/
+        power.battery = 0;
+        power.battery_pc = 0;
 
-    // Compute temperature value
-    power.temp = (float) power.raw_temp / 100.f; //((3.3f / 1024) * (float)power.raw_temp/2);
-    //power.temp = power.temp / 1.61f - 273.15; // 1.61 = AVG Slope from data sheet
+        // Temperature is unused on this version...
+        power.temp = -100;
 
+    }
+    // WIMU3
+    if (current_config->hwId==3){
+        power.status = ((WIMU::PowerStates)(status & 0x7F));
+        power.charging = (status & 0x80) > 0;
+
+        // Compute battery voltage
+        power.battery = (float)power.raw_battery / 100.f; //(3.3f / 1024) * (float)power.raw_battery / 2;
+        power.battery_pc = qMin((quint8)100, (quint8)((power.battery-3.3) / (3.7f-3.3f) * 100));
+
+        // Compute temperature value
+        power.temp = (float) power.raw_temp / 100.f; //((3.3f / 1024) * (float)power.raw_temp/2);
+        //power.temp = power.temp / 1.61f - 273.15; // 1.61 = AVG Slope from data sheet
+    }
+    if (!config)
+        delete current_config;
     return power;
 }
 
@@ -208,7 +238,7 @@ WIMU::Modules_ID WIMUBinaryStream::getModuleID(){
     return m_idModule;
 }
 
-int WIMUBinaryStream::getGPSMessageID(){
+quint8 WIMUBinaryStream::getGPSMessageID(){
     int rval = -1;
 
     if (m_idModule != WIMU::MODULE_GPS){
@@ -219,7 +249,7 @@ int WIMUBinaryStream::getGPSMessageID(){
     QByteArray payload = getGPSMessagePayload();
 
     if (!payload.isEmpty()){
-        return payload.at(0);
+        return (quint8)payload.at(0);
     }
     return rval;
 }
@@ -428,4 +458,88 @@ WIMUBinaryStream& WIMUBinaryStream::operator = (const WIMUBinaryStream& original
     m_data = original.m_data;
 
     return *this;
+}
+
+QList<QVector3D> WIMUBinaryStream::convertToAccSensorData(WIMUConfig* config){
+    QList<QVector3D> rval;
+
+    if (m_fromFile){
+        // Create all samples
+        for (int i=0; i<config->general.sampling_rate; i++){
+            rval.append(QVector3D());
+        }
+
+        QDataStream reader(m_data);
+        reader.setByteOrder(QDataStream::LittleEndian);
+        qint16 value=0;
+        float fvalue;
+        for (int i=0; i<3; i++){ // 3 channels
+            for (int j=0; j<config->general.sampling_rate; j++){ // All samples
+                reader >> value;
+                fvalue = config->convertAcc2g(value);
+                rval[j][i] = fvalue;
+            }
+        }
+
+    }else{
+
+    }
+
+    return rval;
+}
+
+QList<QVector3D> WIMUBinaryStream::convertToGyroSensorData(WIMUConfig* config){
+    QList<QVector3D> rval;
+
+    if (m_fromFile){
+        // Create all samples
+        for (int i=0; i<config->general.sampling_rate; i++){
+            rval.append(QVector3D());
+        }
+
+        QDataStream reader(m_data);
+        reader.setByteOrder(QDataStream::LittleEndian);
+        qint16 value=0;
+        float fvalue;
+        for (int i=0; i<3; i++){ // 3 channels
+            for (int j=0; j<config->general.sampling_rate; j++){ // All samples
+                reader >> value;
+                fvalue = config->convertGyro2degs(value);
+                rval[j][i] = fvalue;
+            }
+        }
+
+    }else{
+
+    }
+
+    return rval;
+}
+
+QList<QVector3D> WIMUBinaryStream::convertToMagnetoSensorData(WIMUConfig* config){
+    QList<QVector3D> rval;
+
+    if (m_fromFile){
+        // Create all samples
+        for (int i=0; i<config->general.sampling_rate; i++){
+            rval.append(QVector3D());
+        }
+
+        QDataStream reader(m_data);
+        reader.setByteOrder(QDataStream::LittleEndian);
+        qint16 value=0;
+        float fvalue;
+        for (int i=0; i<3; i++){ // 3 channels
+            for (int j=0; j<config->general.sampling_rate; j++){ // All samples
+                reader >> value;
+                fvalue = config->convertMag2gauss(value);
+                rval[j][i] = fvalue;
+            }
+        }
+
+    }else{
+
+    }
+
+    return rval;
 }

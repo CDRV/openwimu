@@ -99,7 +99,8 @@ namespace WIMU{
         POWER_STATE_USB,
         POWER_STATE_USB_MASS,
         POWER_STATE_USB_COM,
-        POWER_STATE_OFF
+        POWER_STATE_OFF,
+        POWER_STATE_UNKNOWN
     }  PowerStates;
 
     typedef struct{

@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QGraphicsScene>
+#include <QTimer>
 #include "timeview.h"
 #include "wimu.h"
 #include "wimulog.h"
@@ -40,7 +41,12 @@ private:
     QList<quint32>          m_dataStarts; // Start times of each data set (day)
     QList<quint32>          m_dataEnds;   // End times of each data set (day)
 
+    quint32                 m_currentTime;
+    QTimer                  m_playTimer;
+
     void resizeEvent(QResizeEvent *event);
+
+    void updateDisplayedTime();
 
     WIMULog* findClosestPreviousLog(quint32 ts);
     WIMULog* findClosestNextLog(quint32 ts);
@@ -48,6 +54,9 @@ private:
 private slots:
     void timeSliderValueChanged(int value);
     void timeViewClicked(int pos);
+
+    void btnPlayClicked();
+    void playTimerTimeout();
 
 public slots:
     void selectTime(quint32 timestamp);

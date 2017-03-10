@@ -18,7 +18,14 @@ TimeBrowser::TimeBrowser(QWidget *parent) :
     connect(ui->sldTime,SIGNAL(valueChanged(int)), this, SLOT(timeSliderValueChanged(int)));
     connect(ui->timeView, SIGNAL(timeClicked(int)), this, SLOT(timeViewClicked(int)));
 
+    connect(ui->btnPlay,SIGNAL(clicked(bool)),this,SLOT(btnPlayClicked()));
+    connect(&m_playTimer, SIGNAL(timeout()), this, SLOT(playTimerTimeout()));
+
     m_refreshing = false;
+
+    m_currentTime = 0;
+    m_playTimer.setInterval(1000);
+    m_playTimer.setSingleShot(false);
 }
 
 TimeBrowser::~TimeBrowser()
@@ -249,17 +256,23 @@ void TimeBrowser::updateDisplay(){
     // Add current time pointer
     m_timeBar = m_scene.addLine(0,0,0,ui->timeView->height(),QPen(Qt::yellow));
 
+    if (!m_dataStarts.isEmpty()){
+        m_currentTime = m_dataStarts.first();
+        updateDisplayedTime();
+    }
     m_refreshing = false;
 }
 
 void TimeBrowser::timeSliderValueChanged(int value){
     if (m_refreshing)
         return;
+    m_refreshing = true;
 
     // Update date display
-    QDateTime current_date = QDateTime::fromSecsSinceEpoch(value,Qt::UTC);
+    //QDateTime current_date = QDateTime::fromSecsSinceEpoch(value,Qt::UTC);
 
-    ui->lblDateTime->setText(current_date.toString("dd-MM-yyyy hh:mm:ss"));
+    //ui->lblDateTime->setText(current_date.toString("dd-MM-yyyy hh:mm:ss"));
+    updateDisplayedTime();
 
     // Update time bar position
     if (m_timeBar){
@@ -268,7 +281,9 @@ void TimeBrowser::timeSliderValueChanged(int value){
         m_timeBar->setPos( pos,0);
     }
 
+    m_currentTime = value;
     emit timeChanged((quint32)value);
+    m_refreshing = false;
 }
 
 void TimeBrowser::resizeEvent(QResizeEvent *event){
@@ -283,7 +298,7 @@ void TimeBrowser::timeViewClicked(int pos){
     }
 
     // Update slider value position
-    disconnect(ui->sldTime,SIGNAL(valueChanged(int)));
+    ui->sldTime->disconnect(SIGNAL(valueChanged(int)));
     quint32 timestamp = ((float)pos / ui->timeView->width()) * (ui->sldTime->maximum()-ui->sldTime->minimum()) + ui->sldTime->minimum();
     selectTime(timestamp);
     connect(ui->sldTime,SIGNAL(valueChanged(int)), this, SLOT(timeSliderValueChanged(int)));
@@ -298,6 +313,8 @@ void TimeBrowser::selectTime(quint32 timestamp){
         timestamp = ui->sldTime->maximum();
 
     ui->sldTime->setValue(timestamp);
+    m_currentTime = timestamp;
+    updateDisplayedTime();
 }
 
 WIMULog* TimeBrowser::findClosestPreviousLog(quint32 ts){
@@ -328,4 +345,43 @@ WIMULog* TimeBrowser::findClosestNextLog(quint32 ts){
 
 
     return rval;
+}
+
+void TimeBrowser::btnPlayClicked(){
+    static bool playing = false;
+
+    if (playing){
+        ui->btnPlay->setIcon(QIcon(":/icons/images/play.png"));
+        m_playTimer.stop();
+        playing = false;
+    }else{
+        ui->btnPlay->setIcon(QIcon(":/icons/images/stop.png"));
+        m_playTimer.start();
+        playing = true;
+    }
+}
+
+void TimeBrowser::playTimerTimeout(){
+    m_currentTime+=ui->spinSpeed->value();
+    if (m_dataEnds.count()>0){
+        if (m_currentTime > m_dataEnds.last()){
+            btnPlayClicked(); // Stop playback
+            return;
+        }
+    }
+
+    selectTime(m_currentTime);
+}
+
+void TimeBrowser::updateDisplayedTime(){
+    QDateTime current_time = QDateTime::fromSecsSinceEpoch(m_currentTime,Qt::UTC);
+
+    ui->lcdDay->display(current_time.date().day());
+    ui->lcdMonth->display(current_time.date().month());
+    ui->lcdYear->display(current_time.date().year());
+    ui->lcdHour->display(current_time.time().hour());
+    ui->lcdMin->display(current_time.time().minute());
+    ui->lcdSec->display(current_time.time().second());
+
+
 }

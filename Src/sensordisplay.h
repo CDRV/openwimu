@@ -33,12 +33,16 @@ public:
     void setDataFiles(QList<QString> &paths, QList<quint16> &ids);
 
 private:
+
+    void clearGPSDisplay();
+
     Ui::SensorDisplay *ui;
 
     TimeBrowser*            m_timeBrowser;
     EventsBrowser*          m_eventBrowser;
     QList<QString>          m_dataPaths;
     QList<quint16>          m_dataIds;
+    QList<quint32>          m_dataStartTimes;
 
     DataGraph*              m_graphAcc;
     QList<SensorBuffer*>    m_dataAcc;

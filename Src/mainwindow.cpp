@@ -1296,6 +1296,22 @@ void MainWindow::folderItemClicked(QTreeWidgetItem* item, int col){
 
     if (paths.isEmpty())
         return;
+
+    // Load config and settings
+    if (QFile::exists(paths.first() + "/SETTINGS")){
+        m_wimuSettings.loadFromFile(paths.first() + "/SETTINGS");
+    }else{
+        addToLog("Aucun fichier de paramètres n'a été trouvé.",WIMU::LogError);
+    }
+
+    if (QFile::exists(paths.first() + "/CONFIG.WCF")){
+        m_wimuConfig.hwId = m_wimuSettings.hw_id;
+        m_wimuConfig.loadFromFile(paths.first() + "/CONFIG.WCF");
+    }else{
+        addToLog("Aucun fichier de configuration valide n'a été trouvé.",WIMU::LogError);
+    }
+
+
     // Show sensor
     showSensorDisplay();
     m_sensorDisplay->showBrowser(true);

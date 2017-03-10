@@ -61,6 +61,10 @@
         <file>images/patient_red.png</file>
         <file>images/patient_yellow.png</file>
         <file>images/folder_red.png</file>
+        <file>images/backward.png</file>
+        <file>images/forward.png</file>
+        <file>images/play.png</file>
+        <file>images/stop.png</file>
     </qresource>
     <qresource prefix="/3d">
         <file>images/WIMU3D.obj</file>

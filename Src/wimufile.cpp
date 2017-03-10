@@ -75,6 +75,157 @@ bool WIMUFile::load(bool ignore_timefile){
     return false;
 }
 
+bool WIMUFile::load(quint32 start_filetime, quint32 ts, qint32 len){
+    QFile file;
+    m_times.clear();
+
+
+    // Load data from file
+    file.setFileName(m_filename);
+
+
+    if (file.open(QIODevice::ReadOnly)){
+        // Find correct position depending on sample size
+        qint64 pos;
+
+        if (m_filetype!=WIMU::MODULE_GPS){
+            pos = (ts-start_filetime) * getSampleSize(); // Not true, since there might be a "jump" in the timestamps in the file
+
+            QString time_name ="";
+            QStringList names = m_filename.replace("\\","/").split("/");
+            if (!names.isEmpty()){
+                time_name = "TIME_" + names.last();
+                for (int i=names.count()-2; i>=0; i--){
+                    time_name = names.at(i) + "\\" + time_name;
+                }
+
+                if (QFile::exists(time_name)){
+                    // Load time data
+                    QFile time_file(time_name);
+
+                    if (time_file.open(QIODevice::ReadOnly)){
+                        quint32 count = qMax((int)((ts-start_filetime)-60)-1,0);
+                        //TOFIX: will not work if timestamp does not contains 10 caracters
+                        time_file.seek(count*11); // 11 = general size of text timestamp + \n
+                        QString time = time_file.readLine();
+                        while (time.toUInt() > ts){
+                            // Move back 60 seconds
+                            count -=60;
+                            time_file.seek(count*11);
+
+                            time = time_file.readLine();
+                        }
+                        while (!time_file.atEnd() && time.toUInt()<ts){
+                            time = time_file.readLine();
+                            count++;
+                        }
+                        time_file.close();
+                        pos = count * getSampleSize(); // Count is now at the correct timestamp
+                    }
+
+                }
+            }
+
+            file.seek(pos);
+
+            // Read samples from here, up to "len"
+            m_fileBuffer.buffer().clear();
+            for (int i=0; i<len; i++){
+                if (!file.atEnd()){
+                    QByteArray sample = file.read(getSampleSize());
+                    m_fileBuffer.buffer().append(sample);
+                }
+            }
+
+            file.close();
+            m_fileBuffer.open(QIODevice::ReadOnly);
+        }else{ // GPS file
+            QString index_name ="";
+            QStringList names = m_filename.replace("\\","/").split("/");
+            if (!names.isEmpty()){
+                index_name = "INDEX_" + names.last();
+                for (int i=names.count()-2; i>=0; i--){
+                    index_name = names.at(i) + "\\" + index_name;
+                }
+                if (QFile::exists(index_name)){
+                    // Load time data
+                    QFile index_file(index_name);
+                    if (index_file.open(QIODevice::ReadOnly)){
+                        quint32 count = qMax((int)((ts-start_filetime)-60)-1,0);
+                        index_file.seek(count*12); // 12 = timestamp (4 bytes) + position (8 bytes)
+                        QDataStream reader(&index_file);
+                        reader.setByteOrder(QDataStream::LittleEndian);
+                        quint32 current_ts;
+                        quint32 last_ts;
+                        qint64 last_pos;
+                        qint64 current_pos;
+                        reader >> current_ts >> current_pos;
+
+                        while (current_ts > ts){
+                            // Move back 60 seconds
+                            count -=60;
+                            index_file.seek(count*12);
+
+                            reader >> current_ts >> current_pos;
+                            last_pos = current_pos;
+                            last_ts = current_ts;
+                        }
+
+                        while (!index_file.atEnd() && current_ts<ts){
+                            last_pos = current_pos;
+                            last_ts = current_ts;
+                            reader >> current_ts >> current_pos;
+                        }
+
+                        pos = current_pos; // Count is now at the correct timestamp
+                        m_fileBuffer.buffer().clear();
+                        m_lastGPSTime = current_ts;
+
+                        // Build list of sample positions to read
+                        count =0;
+                        QList<qint64> positions;
+                        positions.append(current_pos);
+                       // qDebug() << current_pos;
+                        while ((qint32)count<len){
+                            last_ts = current_ts;
+                            reader >> current_ts >> current_pos;
+                            positions.append(current_pos);
+                            if (last_ts != current_ts)
+                                count++;
+                            if (file.atEnd() || last_ts ==0)
+                                break;
+                        }
+                        index_file.close();
+
+                        for (int i=0; i<positions.count()-1; i++){
+                            file.seek(positions.at(i));
+                            if (!file.atEnd() && (positions.at(i+1)-positions.at(i))>0){
+                                QByteArray sample = file.read(positions.at(i+1)-positions.at(i));
+                                m_fileBuffer.buffer().append(sample);
+                            }
+                        }
+
+
+                        file.close();
+                        m_fileBuffer.open(QIODevice::ReadOnly);
+                        if (!positions.isEmpty())
+                            fillSamplesList(m_fileBuffer.buffer(), positions.first());
+
+                    }
+                }else{
+                    return false;
+                }
+
+
+            }else{
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 void WIMUFile::close(){
     //m_file.close();
     m_fileBuffer.buffer().clear();
@@ -173,6 +324,7 @@ QByteArray WIMUFile::readSample(){
         // Check if message is valid
         if (m_currentIndex < m_samples.count()){
             QByteArray * sample = &m_samples[m_currentIndex++];
+            //qDebug() << m_samples;
             if ((quint8)sample->at(0)==0xA0 && (quint8)sample->at(1)==0xA2 &&
                 (quint8)sample->at(sample->count()-2)==0xB0 && (quint8)sample->at(sample->count()-1)==0xB3){
                 rval = *sample;
@@ -310,11 +462,15 @@ qint64 WIMUFile::getCurrentPos(){
 
         return m_fileBuffer.pos();
     }else{
-        qint64 pos=0;
+        /*qint64 pos=0;
         for (int i=m_currentIndex-1; i>=0; i--){
             pos += m_samples.at(i).count();
         }
-        return pos;
+        return pos;*/
+        if (m_currentIndex>0)
+            return m_samplesPos.at(m_currentIndex-1);
+        else
+            return 0;
     }
 }
 
@@ -326,35 +482,26 @@ QString WIMUFile::getFileName(){
     return m_filename;
 }
 
-void WIMUFile::fillSamplesList(QByteArray& data){
+void WIMUFile::fillSamplesList(QByteArray& data, quint64 offset){
     // Fill the samples list from the ByteArray
+    m_samples.clear();
+    m_samplesPos.clear();
     if (m_filetype==WIMU::MODULE_GPS){
         QList<QByteArray> samples = data.split((char)0xB3);
+        qint64 pos = 0;
+
         // Merge samples if needed
         QByteArray new_sample;
         for (int i=0; i<samples.count(); i++){
             QByteArray* sample = &samples[i];
             new_sample.append(*sample);
             new_sample.append((char)0xB3); // Was filtered when splitting
-            /*if (new_sample.count()>=2){
-                if ((quint8)new_sample.at(0) != 0xA0 && (quint8)new_sample.at(1) != 0xA3){
-                    // Resync GPS message
-                    while(new_sample.count()>=2){
-                        new_sample = new_sample.right(new_sample.count()-2);
-                        if ((quint8)new_sample.at(0) == 0xA0 && (quint8)new_sample.at(1) == 0xA3){
-                            break;
-                        }
-                    }
-                    if ((quint8)new_sample.at(0) != 0xA0 && (quint8)new_sample.at(1) != 0xA3){
-                        new_sample.clear();
-                    }
-                }
-            }*/
             if (new_sample.count()>=2){
-
                 if ((quint8)new_sample.at(new_sample.count()-2)==0xB0 &&
                      (quint8)new_sample.at(new_sample.count()-1)==0xB3){
                     m_samples.append(new_sample);
+                    m_samplesPos.append(pos+offset);
+                    pos += new_sample.count();
                     new_sample.clear();
                 }
             }

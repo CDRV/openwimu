@@ -78,7 +78,6 @@ public:
     explicit WIMUConfig(QObject *parent = 0);
     WIMUConfig(const WIMUConfig &copy, QObject *parent=0);
 
-
     void enableModule(WIMU::Modules_ID module, bool enable);
     bool isModuleEnabled(WIMU::Modules_ID module);
     void setDefaults();
@@ -94,6 +93,8 @@ public:
     float convertAcc2g(qint16 &value);
     float convertGyro2degs(qint16 &value);
     float convertMag2gauss(qint16 &value);
+    float convertBatt2volt(quint16 &value);
+    float convertTemp2deg(qint16 & value);
 
     quint8 getAccRangeValue();
     quint16 getGyroRangeValue();
@@ -116,7 +117,7 @@ public:
     WIMUConfig_MagOptions       magneto;           // Magneto options
     WIMUConfig_IMUOptions       imu;               // IMU options
 
-    quint8  m_hwId;
+    quint8  hwId;
 
 signals:
 

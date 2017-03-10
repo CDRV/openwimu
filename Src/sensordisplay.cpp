@@ -3,8 +3,11 @@
 
 #include <QPointF>
 #include <QHBoxLayout>
+#include <QStringList>
+
 #include "wimufile.h"
 #include "wimubinarystream.h"
+#include "wimuprocessor.h"
 
 //#include <Qt3DCore/qaspectengine.h>
 
@@ -88,7 +91,7 @@ SensorDisplay::SensorDisplay(WIMUConfig* config, WIMUSettings* settings, QWidget
 
     // Init GPS display
     m_webMap = NULL;
-    /*m_webMap = new QWebEngineView(ui->wdgGPSMap);
+    m_webMap = new QWebEngineView(ui->wdgGPSMap);
     ui->wdgGPSMap->layout()->addWidget(m_webMap);
 
     QString mapPath = QApplication::applicationDirPath() + "/map.html";
@@ -97,7 +100,7 @@ SensorDisplay::SensorDisplay(WIMUConfig* config, WIMUSettings* settings, QWidget
         qDebug() << "ERREUR: Gabarit de carte " + mapPath + " introuvable!";
     }else{
         m_webMap->setUrl(QUrl(mapPath));
-    }*/
+    }
 
     ui->lblGPSStatus->setText("Aucune position.");
     ui->frameGPSPosition->setVisible(false);
@@ -122,6 +125,10 @@ SensorDisplay::SensorDisplay(WIMUConfig* config, WIMUSettings* settings, QWidget
     if (!config->isModuleEnabled(WIMU::MODULE_GPS)){
         ui->chkGPS->setChecked(false);
         ui->chkGPS->setVisible(false);
+    }
+
+    if (settings->hw_id<3){
+        ui->frameGeneral->setVisible(false);
     }
 
 }
@@ -370,10 +377,36 @@ void SensorDisplay::addPowerFrame(WIMU::PowerFrame_Struct &power){
         status = "Branché USB (Mode Storage)";
         break;
     default:
-        status = "État inconnu.";
+        status = "";// "État inconnu.";
     }
 
     ui->lblStatus->setText(status);
+
+}
+
+void SensorDisplay::clearGPSDisplay(){
+    ui->lblIconGPSAlive->setPixmap(QPixmap(":/icons/images/led_white.png"));
+
+    ui->lblGPSStatus->setText("");
+    ui->lblIconGPSStatus->setPixmap(QPixmap(":/icons/images/led_red.png"));
+    ui->lblGPSStatus->setText("Aucune position.");
+    //ui->frameGPSPosition->setVisible(false);
+
+    for (int i=0; i<12; i++){
+        QProgressBar* bar = ui->frameSatellites->findChild<QProgressBar*>(QString("progSat_" + QString::number(i+1)));
+        if (bar){
+            bar->setValue(0);
+        }
+
+        QLabel* label = ui->frameSatellites->findChild<QLabel*>(QString("lblSat_" + QString::number(i+1)));
+        if (label){
+            label->setText("");
+        }
+    }
+
+    // Update map
+   /* if (m_webMap)
+        m_webMap->page()->runJavaScript("clearMap();");*/
 
 }
 
@@ -420,47 +453,62 @@ void SensorDisplay::setDataFiles(QList<QString> &paths, QList<quint16> &ids){
     if (m_eventBrowser)
         m_eventBrowser->clearWIMULogs();
 
-    // Load logs for those files
+    // Load logs and times for those files
     QList<WIMULog> logs;
     int count = 0;
+    m_dataStartTimes.clear();
+
     foreach(QString path, paths){
         quint16 id = ids.at(count++);
-        //foreach(quint16 id, ids){
-            QString filename = path + "/LOG_" + QString::number(id) + ".DAT";
-            //qDebug() << "Processing " << filename;
-            if (QFile::exists(filename)){
-                WIMUFile logfile(filename, WIMU::MODULE_CPU, *m_settings, *m_config);
-                if (!logfile.load()){
-                    emit requestLogging("Impossible de charger le fichier " + filename,WIMU::LogError);
-                    return;
-                }
-
-                QByteArray logdata = logfile.readSample();
-                while (!logdata.isEmpty()){
-                    WIMUBinaryStream bin;
-                    bin.fromBinaryFile(logdata,WIMU::MODULE_CPU);
-
-                    WIMULog log = bin.convertToWIMULog(m_settings->hw_id);
-                    log.timestamp = logfile.getCurrentSampleTime();
-
-                    logs.append(log);
-                    logdata = logfile.readSample();
-
-                }
-
-                logfile.close();
-
-
-
-            }else{
-                qDebug() << "Skipping " << filename << ": not present";
+        //////// LOGS
+        QString filename = path + "/LOG_" + QString::number(id) + ".DAT";
+        //qDebug() << "Processing " << filename;
+        if (QFile::exists(filename)){
+            WIMUFile logfile(filename, WIMU::MODULE_CPU, *m_settings, *m_config);
+            if (!logfile.load()){
+                emit requestLogging("Impossible de charger le fichier " + filename,WIMU::LogError);
+                return;
             }
-        //}
+
+            QByteArray logdata = logfile.readSample();
+            while (!logdata.isEmpty()){
+                WIMUBinaryStream bin;
+                bin.fromBinaryFile(logdata,WIMU::MODULE_CPU);
+
+                WIMULog log = bin.convertToWIMULog(m_settings->hw_id);
+                log.timestamp = logfile.getCurrentSampleTime();
+
+                logs.append(log);
+                logdata = logfile.readSample();
+
+            }
+            logfile.close();
+        }else{
+            qDebug() << "Skipping " << filename << ": not present";
+        }
+
+        ///////// Time for that dataset
+        filename = path + "/TIMES.DAT";
+        if (QFile::exists(filename)){
+            QFile timefile(filename);
+            if (timefile.open(QIODevice::ReadOnly)){
+                QByteArray data;
+                while (!timefile.atEnd()){
+                    data = timefile.readLine();
+                    QStringList datas = QString(data).replace("\n","").split(",");
+                    if (datas.count()==3){
+                        if (datas.at(0).toUInt() == id){
+                            m_dataStartTimes.append(datas.at(1).toUInt());
+                        }
+                    }
+                }
+                timefile.close();
+            }
+        }
     }
 
     // Order list of logs in case of mix-up
     std::sort(logs.begin(),logs.end());
-
 
     // Add logs to correct views
     foreach (WIMULog log, logs){
@@ -478,6 +526,162 @@ void SensorDisplay::setDataFiles(QList<QString> &paths, QList<quint16> &ids){
 }
 
 void SensorDisplay::displayTimeWasChanged(quint32 new_time){
-    //Load data from sensors file, depending on the time
+    static bool updating = false;
+
+    if (updating)
+        return;
+
+    if (m_dataStartTimes.isEmpty())
+        return;
+
+    //qDebug() << new_time;
+
+    updating = true;
+   // Get path and id to load
+   quint16 id=0;
+   QString path;
+   QPointF minMaxAcc(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
+   QPointF minMaxGyro(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
+   QPointF minMaxMag(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
+   QPointF minMaxIMU(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
+
+   for (int i=1; i<m_dataStartTimes.count(); i++){
+       if (m_dataStartTimes.at(i) > new_time && m_dataStartTimes.at(i-1) <= new_time ){
+           id = i-1;
+           break;
+       }
+   }
+   path = m_dataPaths.at(id);
+
+   // Build sensor list to load
+   QStringList sensors = WimuProcessor::getSensorList(path);
+   if (sensors.contains("LOG"))
+       sensors.removeAll("LOG");
+
+   // Clear current graph data
+   for (int i=0; i<3; i++){
+    m_dataAcc.at(i)->empty();
+    m_dataGyro.at(i)->empty();
+    m_dataMag.at(i)->empty();
+    m_dataIMU.at(i)->empty();
+   }
+   m_dataIMU.at(3)->empty();
+
+   // Load data from files
+   foreach (QString sensor, sensors){
+       WIMUFile datafile(path + "/" + sensor + "_" + QString::number(m_dataIds.at(id)) + ".DAT",
+                     WIMUFile::getModuleFromPrefix(sensor), *m_settings, *m_config);
+
+       // TODO: load a number of seconds equal to the max x of the graphs instead of the default 10
+       quint16 len = 10;
+       if (sensor=="GPS")
+           len = 1; // Always one second for GPS
+
+       if (datafile.load(m_dataStartTimes.at(id),new_time, len)){
+
+           if (sensor!="GPS"){
+               for (int sample=0; sample<len;sample++){
+                   QByteArray data = datafile.readSample();
+                   data = datafile.getSampleData(&data);
+
+                   WIMUBinaryStream converter;
+                   converter.fromBinaryFile(data,WIMUFile::getModuleFromPrefix(sensor));
+                   //qDebug() << sensor;
+                   if (sensor=="ACC"){
+                       QList<QVector3D> acc = converter.convertToAccSensorData(m_config);
+                       for (int i=0; i<3; i++){
+                           for (int j=0; j<acc.count(); j++){
+                               m_dataAcc.at(i)->addSample(acc[j][i]);
+                               minMaxAcc.setX(qMin((float)minMaxAcc.x(), m_dataAcc.at(i)->min()));
+                               minMaxAcc.setY(qMax((float)minMaxAcc.y(), m_dataAcc.at(i)->max()));
+                           }
+                       }
+                   }
+
+                   if (sensor=="GYR"){
+                       QList<QVector3D> gyro = converter.convertToGyroSensorData(m_config);
+                       for (int i=0; i<3; i++){
+                           for (int j=0; j<gyro.count(); j++){
+                               m_dataGyro.at(i)->addSample(gyro[j][i]);
+                               minMaxGyro.setX(qMin((float)minMaxGyro.x(), m_dataGyro.at(i)->min()));
+                               minMaxGyro.setY(qMax((float)minMaxGyro.y(), m_dataGyro.at(i)->max()));
+                           }
+                       }
+                   }
+
+                   if (sensor=="MAG"){
+                       QList<QVector3D> mag = converter.convertToMagnetoSensorData(m_config);
+                       for (int i=0; i<3; i++){
+                           for (int j=0; j<mag.count(); j++){
+                               m_dataMag.at(i)->addSample(mag[j][i]);
+                               minMaxMag.setX(qMin((float)minMaxMag.x(), m_dataMag.at(i)->min()));
+                               minMaxMag.setY(qMax((float)minMaxMag.y(), m_dataMag.at(i)->max()));
+                           }
+                       }
+                   }
+
+                   if (sensor=="POW"){
+                       WIMU::PowerFrame_Struct power = converter.convertToPowerFrame(m_config);
+                       addPowerFrame(power);
+                   }
+                   if (sensor=="IMU"){
+                       // TODO
+                   }
+               }
+           }else{ // GPS Data
+               //clearGPSDisplay();
+               QByteArray data = datafile.readSample();
+               WIMUBinaryStream converter;
+               converter.fromBinaryFile(data,WIMUFile::getModuleFromPrefix(sensor));
+               quint32 sample_time = datafile.getSampleTime(&data);
+               quint32 current_time = sample_time;
+               bool track_found = false;
+               // Read all samples for that time
+               while (!data.isEmpty()){
+                   //qDebug() << data;
+                   int msg_id = converter.getGPSMessageID();
+                   //qDebug() << msg_id;
+                    if (msg_id==41){
+                        WIMU::GPSNavData_Struct nav = converter.convertToGPSNavData();
+                        // Correct timestamp
+                        //TODO
+                        addGPSNavData(nav);
+                    }
+                    if (msg_id==4){
+                        WIMU::GPSTrackerData_Struct track = converter.convertToGPSTrackerData();
+                        addGPSTrackerData(track);
+                        track_found = true;
+                    }
+                    data = datafile.readSample();
+                    converter.fromBinaryFile(data,WIMUFile::getModuleFromPrefix(sensor));
+                    current_time = datafile.getSampleTime(&data);
+                    if (data.isEmpty() || data.isNull())
+                        break;
+               }
+
+               if (!track_found){
+                   clearGPSDisplay();
+               }
+
+           }
+           datafile.close();
+       }else{
+           emit requestLogging("Erreur: impossible d'ouvrir le fichier " + datafile.getFileName(), WIMU::LogError);
+       }
+
+   }
+
+   // Display data
+   m_graphAcc->setAxisScale (QwtPlot::yLeft, minMaxAcc.x(), minMaxAcc.y());
+   m_graphAcc->replot();
+
+   m_graphGyro->setAxisScale (QwtPlot::yLeft, minMaxGyro.x(), minMaxGyro.y());
+   m_graphGyro->replot();
+
+   m_graphMag->setAxisScale (QwtPlot::yLeft, minMaxMag.x(), minMaxMag.y());
+   m_graphMag->replot();
+
+   updating = false;
+
 
 }

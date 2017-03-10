@@ -124,7 +124,7 @@ bool WimuProcessor::preProcess(QString path){
 
     // Combine files and correct timestamp on a dataset folder basis
     emit requestLogging("Combinaison et nettoyage final des données...",WIMU::LogInfo);
-    emit requestProgressInit("Combinaison et nettoyage final des données",0,6);
+    emit requestProgressInit("Combinaison et nettoyage final des données",0,7);
     combineDataSet(path, folders);
     if (m_cancel)
         return false;
@@ -357,7 +357,8 @@ void WimuProcessor::correctTimestamp(QString path){
 
     /*file_prefixes.clear();
     file_prefixes.append("LOG");
-    file_prefixes.append("POW");*/
+    file_prefixes.append("ACC");
+    //file_prefixes.append("POW");*/
 
     //////////////////////////////////////////////////////////////////////
     // Step 6. Create all empty files required for those days and sensors
@@ -440,6 +441,7 @@ void WimuProcessor::correctTimestamp(QString path){
         quint32 gps_count = 0; // Offset to add from start index
         int gps_index = 0; // Start index
         quint16 not_found_count=0;
+        QList<quint32> not_found_indexes;
 
         WIMUBinaryStream wimu_data;
 
@@ -610,6 +612,7 @@ void WimuProcessor::correctTimestamp(QString path){
                                 // Append last timestamp in order to have a "base"
                                 timestamps.append(last_ts);
                             }
+                            not_found_indexes.append(timestamps.count());
 
                             /*if (not_found_count>=120){
                                 emit requestLogging("Erreur: données positionnées à un mauvais moment...",WIMU::LogWarning);
@@ -620,10 +623,11 @@ void WimuProcessor::correctTimestamp(QString path){
                         }else{
                             if (not_found_count>0){
                                 // We are back on track... so correct timestamps and move on as this was indeed just a bad jump to the future
-                                correctBadTimestamps(timestamps);
+                                correctBadTimestamps(timestamps, not_found_indexes);
                                 // Remove "first" timestamp, which was kept to correctly correct the timestamps
                                 timestamps.takeFirst();
                                 not_found_count = 0;
+                                not_found_indexes.clear();
                             }
                         }
                     }
@@ -647,10 +651,11 @@ void WimuProcessor::correctTimestamp(QString path){
             } // While data
 
             if (not_found_count>0){
-                correctBadTimestamps(timestamps);
+                correctBadTimestamps(timestamps, not_found_indexes);
                 // Remove "first" timestamp, which was kept to correctly correct the timestamps
                 timestamps.takeFirst();
                 not_found_count = 0;
+                not_found_indexes.clear();
             }
             // Write what we have so far
             if (!dates.isEmpty()){
@@ -990,8 +995,11 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
             /*if (sensor=="GPS") // Don't touch GPS time!
                 continue;*/
 
+
+
             // Get list of files
             QDir ppFolder(path + "/" + folders.at(index) + "/PreProcess");
+            emit requestProgressUpdate(2, "Analyse - " + path + "/" + folders.at(index));
             QStringList files = ppFolder.entryList(QStringList("TIME_" + sensor + "_*.DAT"),QDir::Files);
 
             // Read each file
@@ -1000,6 +1008,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
             QList<quint32> files_ts;
 
             for (i=0; i<files.count(); i++){
+                emit requestLogging("Correction de: " + ppFolder.path() + "/" + files.at(i), WIMU::LogDebug);
                 if (readTimeFile(ppFolder.path(),sensor,i,ts)){
                     // Refactor timestamp
                     for (int j=0; j<ts.count(); j++){
@@ -1179,12 +1188,13 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
     for (i=0; i<folders.count(); i++){
         QDir ppFolder(path + "/" + folders.at(folder_order.at(i)) + "/PreProcess");
 
+        emit requestProgressUpdate(4,"Tri du répertoire: " + path + "/" + folders.at(folder_order.at(i)));
 
         if (ppFolder.exists()){
             QStringList sensors2 = getSensorList(ppFolder.absolutePath());
 
             foreach(sensor,sensors2){
-                emit requestProgressUpdate(4,"Traitement - " + ppFolder.absolutePath() + "/" + sensor);
+                emit requestLogging("Traitement de: " + ppFolder.absolutePath() + "/" + sensor + "_*.DAT", WIMU::LogDebug);
                 // Time
                 QStringList files = ppFolder.entryList(QStringList("TIME_" + sensor + "_*.DAT"),QDir::Files);
                 sortFolderList(files);
@@ -1203,7 +1213,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                             writeTimeFile(path + "/PreProcess",sensor,day_id,ts,previousMidnight(finfo.lastModified().toSecsSinceEpoch()));
                         }
                     }else{
-                        qDebug() << "*** Day not found??! " << last_mod;
+                        qDebug() << "*** Day not found??! " << last_mod << finfo.filePath();
                     }
                     QCoreApplication::processEvents();
                 }
@@ -1221,7 +1231,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
                         writeDataFile(path + "/PreProcess",sensor,day_id,finfo.filePath(),0,0,previousMidnight(finfo.lastModified().toSecsSinceEpoch()));
                     }
                     else{
-                        qDebug() << "*** Day not found??! " << last_mod;
+                        qDebug() << "*** Day not found??! " << last_mod << finfo.filePath();
                     }
                 }
 
@@ -1361,7 +1371,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
 
 
     ///////////////////////////////////////////////////////////////
-    // Step 8. Merge all log files, if present
+    // Step 8. Merge all log files, and copy config / settings files
     ///////////////////////////////////////////////////////////////
     if (sensors.contains("LOG")){
         QDir ppFolder(path + "/PreProcess");
@@ -1380,6 +1390,32 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
         //path + "/PreProcess"
     }
 
+    // Copy config and settings files
+    bool config_found = false;
+    bool settings_found = false;
+    for (i=0; i<folders.count(); i++){
+        if (!config_found){
+            QFile config(path + "/" + folders.at(i) + "/CONFIG.WCF");
+            if (config.exists()){
+                config.copy(path + "/PreProcess/CONFIG.WCF");
+                config_found = true;
+            }
+        }
+        if (!settings_found){
+            QFile config(path + "/" + folders.at(i) + "/SETTINGS");
+            if (config.exists()){
+                config.copy(path + "/PreProcess/SETTINGS");
+                settings_found = true;
+            }
+        }
+        if (config_found && settings_found)
+            break;
+    }
+    if (!config_found)
+        emit requestLogging("Impossible de trouver un fichier de configuration valide!",WIMU::LogError);
+
+    if (!settings_found)
+        emit requestLogging("Impossible de trouver un fichier de paramètres valide!",WIMU::LogError);
     ///////////////////////////////////////////////////////////////
     // Step 9. Find minimum and maximum time for each day
     ///////////////////////////////////////////////////////////////
@@ -1443,11 +1479,47 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
         }
 
         QTextStream out_stream(&out_file);
-        out_stream << QString::number(i) << "," << QString::number(min_ts) << "," << QString::number(max_ts) << "\n";
+        out_stream << QString::number(i+1) << "," << QString::number(min_ts) << "," << QString::number(max_ts) << "\n";
         out_file.close();
     }
 
-    emit requestProgressUpdate(6,"");
+    emit requestProgressUpdate(6,"Création des index GPS");
+    ///////////////////////////////////////////////////////////////
+    // Step 10. Create GPS indexes for navigation
+    ///////////////////////////////////////////////////////////////
+    if (sensors.contains("GPS")){
+        emit requestProgressUpdate(6,"Création des index GPS");
+        QCoreApplication::processEvents();
+        for (i=0; i<fileDateMapping.count(); i++){
+            emit requestLogging("Indexation GPS - Jour #" + QString::number(i+1) + " / " + QString::number(fileDateMapping.count()), WIMU::LogDebug);
+
+            QByteArray dummy_data;
+            WIMUFile gps_file(path + "/PreProcess/GPS_" + QString::number(i+1) + ".DAT",WIMU::MODULE_GPS, *m_settings, *m_config);
+            QFile gps_idx_file(path + "/PreProcess/INDEX_GPS_" + QString::number(i+1) + ".DAT");
+            if (!gps_idx_file.open(QIODevice::WriteOnly)){
+                emit requestLogging("Impossible de créer le fichier INDEX_GPS_" + QString::number(i) + ".DAT",WIMU::LogError);
+                return;
+            }
+
+            QDataStream writer(&gps_idx_file);
+            writer.setByteOrder(QDataStream::LittleEndian);
+            if (gps_file.load()){
+                dummy_data = gps_file.readSample();
+                qint64 first_pos = gps_file.getCurrentPos();
+                while (!dummy_data.isEmpty()){
+                    quint32 current_ts = gps_file.getCurrentSampleTime();
+                    qint64 current_pos = gps_file.getCurrentPos() - first_pos;
+                    writer << current_ts << current_pos;
+                    dummy_data = gps_file.readSample();
+                }
+                QCoreApplication::processEvents();
+            }
+
+            gps_idx_file.close();
+            gps_file.close();
+        }
+    }
+    emit requestProgressUpdate(7,"");
 }
 
 bool WimuProcessor::isTimestampValid(const quint64 &ts){
@@ -1823,62 +1895,58 @@ void WimuProcessor::cancelRequested(){
     m_cancel = true;
 }
 
-void WimuProcessor::correctBadTimestamps(QList<quint32> &timestamps){
+void WimuProcessor::correctBadTimestamps(QList<quint32> &timestamps, QList<quint32> &bad_indexes){
     emit requestLogging("Correction de données mal positionnées temporellement",WIMU::LogWarning);
-    // Try to correct timestamps that have a "jump" in the future...
-    for (int i=0; i<timestamps.count()-2; i++){
-        if ((qint64)timestamps.at(i+1)-(qint64)timestamps.at(i)<0){
-            // We have a descending timestamp value... find the moment it shifted
-            int start_pos = -1;
-            for (int j=qMax(i-120,0); j<qMin(timestamps.count()-1, i-1); j++){
-                if ((timestamps.at(j+1) - timestamps.at(j))>10000){
-                    // We found our start position... correct timestamps from there
-                    start_pos = j+1;
-                    break;
 
-                }
-            }
-            if (start_pos >=0){
+    if (bad_indexes.isEmpty())
+        return;
 
-                QList<quint16> diff;
-                for (int j=start_pos; j<qMin(timestamps.count(), i); j++){
-                    diff.append(timestamps.at(j) - timestamps.at(j-1));
-                }
-                //timestamps[start_pos] = timestamps[start_pos-1] +1; // Correct first sample, suppose 1 seconds
-                diff[0] = 1;
-                for (int j=start_pos; j<qMin(timestamps.count(), i); j++){
-                    timestamps[j] = timestamps[j-1] + diff.at(j-start_pos);
-                }
-            }else{
-                // Check if we have another case of bad timestamp - a jump in the past, and then back in the future...
-                start_pos = -1;
-                for (int j=i+1; j<timestamps.count()-1; j++){
-                    if ((timestamps.at(j+1) - timestamps.at(j))>2){
-                        // We found our start position... correct timestamps from there
-                        start_pos = j+1;
-                        break;
-                    }
-                }
-                if (start_pos>=0){
+    if (timestamps.count()<2)
+        return; // Can't do nothing about it!
 
-                   /* for (int j=i-10; j<start_pos+10; j++)
-                        qDebug() << timestamps.at(j);*/
+    if (timestamps.count()==2){
+        timestamps[1] = timestamps[0]+1;
+        return;
+    }
 
-                    QList<quint16> diff;
-                    for (int j=i+1; j<start_pos; j++){
-
-                        diff.append(timestamps.at(j) - timestamps.at(j-1));
-                    }
-                    diff[0] = 1;
-                    for (int j=0; j<diff.count(); j++){
-                        timestamps[i+j+1] = timestamps[i+j] + diff.at(j);
-
-                    }
-
-                    /*for (int j=i-10; j<start_pos+10; j++)
-                        qDebug() << timestamps.at(j);*/
-                }
-            }
+    // Check if we have a "0" value in the first pos
+    if (timestamps.count()>1){
+        /*if (timestamps.first()==0){
+            timestamps[0] = timestamps[1]-1;
+            bad_indexes.insert(0,0);
+        }*/
+        if (bad_indexes.count()>1){
+            if (bad_indexes.first()==1)
+                bad_indexes.insert(0,0); // The first item is never identified as "bad", but should be.
         }
+    }
+
+    // Build "flex" list - indexes who are not contiguous
+    QList<quint32> flex_indexes;
+    flex_indexes.append(bad_indexes.first());
+    for (int i=0; i<bad_indexes.count()-1; i++){
+        if ((qint32)bad_indexes.at(i+1) - (qint32)bad_indexes.at(i) > 2){
+            flex_indexes.append(bad_indexes.at(i));
+            flex_indexes.append(bad_indexes.at(i+1));
+        }
+    }
+    flex_indexes.append(bad_indexes.last());
+
+    for (int i=0; i<flex_indexes.count()-1; i+=2){
+       QList<quint16> diff;
+       for (quint32 j=flex_indexes.at(i); j<=flex_indexes.at(i+1); j++){
+           if (j>0)
+               diff.append(qMin(timestamps.at(j) - timestamps.at(j-1),(quint32)1));
+           else
+               diff.append(1);
+       }
+       diff[0] = 1;
+       diff[diff.count()-1] = 1;
+       if (timestamps.count()==diff.count())
+           diff.removeLast();
+
+       for (int j=diff.count(); j>0; j--){
+           timestamps[flex_indexes.at(i)+j-1] = timestamps[flex_indexes.at(i)+j] - diff.at(j-1);
+       }
     }
 }

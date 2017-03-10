@@ -4,7 +4,7 @@
 
 WIMUConfig::WIMUConfig(quint8 hw_id, QObject *parent) :
     QObject(parent),
-    m_hwId(hw_id)
+    hwId(hw_id)
 {
     qRegisterMetaType<WIMUConfig>("WIMUConfig");
 
@@ -13,7 +13,7 @@ WIMUConfig::WIMUConfig(quint8 hw_id, QObject *parent) :
 
 WIMUConfig::WIMUConfig(QObject *parent) :
     QObject(parent),
-    m_hwId(3)
+    hwId(3)
 {
     qRegisterMetaType<WIMUConfig>("WIMUConfig");
 
@@ -97,7 +97,7 @@ void WIMUConfig::enableModule(WIMU::Modules_ID module, bool enable){
 }
 
 bool WIMUConfig::isModuleEnabled(WIMU::Modules_ID module){
-    return (enabled_modules & (1 << module))>0;
+    return (enabled_modules & (1 << (module-1)))>0;
 }
 
 bool WIMUConfig::saveToFile(QString filename){
@@ -182,8 +182,13 @@ float WIMUConfig::convertAcc2g(qint16 &value){
     float rval;
     quint8 range_val = getAccRangeValue();
 
-    // TODO: Adjust according to resolution on a different wimu version, if needed
-    rval = ((float)value / 32767.f) * range_val;
+    if (hwId==2)
+        rval = (((float)value / 4095.f) *2 * range_val) - range_val;
+
+    if (hwId==3)
+        rval = ((float)value / 32767.f) * range_val;
+
+
 
     return rval;
 }
@@ -193,8 +198,11 @@ float WIMUConfig::convertGyro2degs(qint16 &value){
 
     quint16 range_val = getGyroRangeValue();
 
-    // TODO: Adjust according to resolution on a different wimu version, if needed
-    rval = ((float)value / 32767.f) * range_val;
+    if (hwId==2)
+        rval = (((float)value / 4095.f) *2 * range_val) - range_val;
+
+    if (hwId==3)
+        rval = ((float)value / 32767.f) * range_val;
 
     return rval;
 }
@@ -204,8 +212,35 @@ float WIMUConfig::convertMag2gauss(qint16 &value){
 
     float range_val = getMagRangeValue();
 
-    // TODO: Adjust according to resolution on a different wimu version, if needed
-    rval = ((float)value / 2048.f) * range_val;
+    if (hwId==2)
+        rval = (((float)value / 4095.f) *2 * range_val) - range_val;
+
+    if (hwId==3)
+        rval = ((float)value / 2048.f) * range_val;
+
+    return rval;
+}
+
+float WIMUConfig::convertBatt2volt(quint16 &value){
+    float rval=0.f;
+
+    if (hwId==2)
+        rval = ((float)value / 4095.f) * 2 * 2.5;
+
+    // On hwId=3, conversion is done on board.
+
+    return rval;
+}
+
+float WIMUConfig::convertTemp2deg(qint16 &value){
+    float rval=0.f;
+
+    if (hwId==2){
+       // TODO, if useful...
+    }
+
+
+    // On hwId=3, conversion is done on board.
 
     return rval;
 }
@@ -213,10 +248,10 @@ float WIMUConfig::convertMag2gauss(qint16 &value){
 quint8 WIMUConfig::getAccRangeValue(){
     quint8 rval=0;
 
-    if (m_hwId==3)
+    if (hwId==3)
         rval = (quint8)1 << (acc.range+1);
 
-    if (m_hwId==2){
+    if (hwId==2){
         if (acc.range==0)
             rval = 1; // Real value should be 1.5
         else{
@@ -230,10 +265,10 @@ quint8 WIMUConfig::getAccRangeValue(){
 quint16 WIMUConfig::getGyroRangeValue(){
     quint16 rval;
 
-    if (m_hwId==3)
+    if (hwId==3)
         rval = (((quint8)1 << (gyro.range))) * 250;
 
-    if (m_hwId==2)
+    if (hwId==2)
         rval = 500;
     return rval;
 }
@@ -241,7 +276,7 @@ quint16 WIMUConfig::getGyroRangeValue(){
 float WIMUConfig::getMagRangeValue(){
     float rval = 0.f;
 
-    if (m_hwId==3){
+    if (hwId==3){
         switch (magneto.range){
         case 0:
             rval = 0.88f;
@@ -272,7 +307,7 @@ float WIMUConfig::getMagRangeValue(){
         }
     }
 
-    if (m_hwId==2){
+    if (hwId==2){
         switch (magneto.range){
         case 0:
             rval = 0.7f;
@@ -350,10 +385,8 @@ void WIMUConfig::unserialize(QByteArray* data){
     ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
     quint8 buf8;
 
-    if (m_hwId==2){
+    if (hwId==2){
         quint16 buf16;
-
-
         ds >> enabled_modules;
         ds >> buf16;
 
@@ -417,7 +450,7 @@ void WIMUConfig::unserialize(QByteArray* data){
         // Ignore the rest for now...!
     }
 
-    if (m_hwId==3){
+    if (hwId==3){
         ds >> enabled_modules;
         //ds >> datetime.time_offset;
         ds >> buf8;

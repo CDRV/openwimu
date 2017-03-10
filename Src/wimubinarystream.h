@@ -2,8 +2,10 @@
 #define WIMUBINARYSTREAM_H
 
 #include <QObject>
+#include <QVector3D>
 #include "wimu.h"
 #include "wimulog.h"
+#include "wimuconfig.h"
 
 #define SYNC_BYTE 0xEA
 
@@ -23,12 +25,17 @@ public:
     WIMU::IMUFrame_Struct convertToIMUFrame();
 
     // GPS
-    int getGPSMessageID();
+    quint8 getGPSMessageID();
     WIMU::GPSNavData_Struct convertToGPSNavData();
     WIMU::GPSTrackerData_Struct convertToGPSTrackerData();
 
     // POWER
-    WIMU::PowerFrame_Struct convertToPowerFrame();
+    WIMU::PowerFrame_Struct convertToPowerFrame(WIMUConfig* config = NULL);
+
+    // OTHER SENSORS
+    QList<QVector3D> convertToAccSensorData(WIMUConfig* config);
+    QList<QVector3D> convertToGyroSensorData(WIMUConfig* config);
+    QList<QVector3D> convertToMagnetoSensorData(WIMUConfig* config);
 
     // LOG
     WIMULog convertToWIMULog(quint8 hw_id);
@@ -43,6 +50,7 @@ private:
 
     QByteArray          m_data;
     WIMU::Modules_ID    m_idModule;
+    bool                m_fromFile;
 };
 
 #endif // WIMUBINARYSTREAM_H

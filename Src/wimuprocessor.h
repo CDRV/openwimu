@@ -18,7 +18,7 @@ public:
     bool preProcess(QString path);
 
     static void sortFolderList(QStringList &folders);
-
+    static QStringList getSensorList(const QString& path);
 private:
     bool m_cancel;
 
@@ -31,7 +31,7 @@ private:
     QDateTime previousMidnight(const QDateTime& time);
     quint32 previousMidnight(const quint32& time);
 
-    void correctBadTimestamps(QList<quint32> &timestamps);
+    void correctBadTimestamps(QList<quint32> &timestamps, QList<quint32> &bad_indexes);
 
     bool writeTimeFile(QString path, QString sensor, qint16 day, const QList<quint32> &times, const quint32 &mod_ts, bool overwrite=false);
     bool readTimeFile(QString path, QString sensor, qint16 day, QList<quint32> &times);
@@ -40,8 +40,6 @@ private:
     bool writeGPSCSVFile(QString path, qint16 day, QList<WIMU::GPSNavData_Struct> &gps_data, const quint32 &mod_ts);
     bool copyFile(QString src, QString dst, const quint32 &mod_ts);
     void setFileModificationTime(const QString& filename, quint32 ts);
-
-    QStringList getSensorList(const QString& path);
 
     quint32 getFilesNumInFolder(QString path, QString filter);
 

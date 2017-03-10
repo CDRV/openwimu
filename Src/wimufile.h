@@ -19,6 +19,7 @@ public:
     ~WIMUFile();
 
     bool            load(bool ignore_timefile=false);
+    bool            load(quint32 start_filetime, quint32 ts, qint32 len);
     void            close();
     //QFile*          getFilePtr();
 
@@ -40,7 +41,7 @@ private:
 
     quint16     getSampleSize();
 
-    void        fillSamplesList(QByteArray &data);
+    void        fillSamplesList(QByteArray &data, quint64 offset=0);
 
     QString             m_filename;
     WIMU::Modules_ID    m_filetype;
@@ -53,6 +54,7 @@ private:
 
     QBuffer             m_fileBuffer;
     QList<QByteArray>   m_samples;
+    QList<qint64>       m_samplesPos;
     QList<quint32>      m_times;
 
     qint32              m_currentIndex;

@@ -1911,13 +1911,15 @@ void WimuProcessor::correctBadTimestamps(QList<quint32> &timestamps, QList<quint
 
     // Check if we have a "0" value in the first pos
     if (timestamps.count()>1){
-        /*if (timestamps.first()==0){
-            timestamps[0] = timestamps[1]-1;
-            bad_indexes.insert(0,0);
-        }*/
         if (bad_indexes.count()>1){
-            if (bad_indexes.first()==1)
-                bad_indexes.insert(0,0); // The first item is never identified as "bad", but should be.
+            if (bad_indexes.count()==timestamps.count()-1){
+                // All timestamps are wrong, suppose first timestamp is good
+                timestamps[timestamps.count()-1] = timestamps.first() + timestamps.count()-1;
+            }else{
+               /* if (bad_indexes.first()==1)
+                    bad_indexes.insert(0,0); // The first item is never identified as "bad", but should be.*/
+            }
+
         }
     }
 
@@ -1946,7 +1948,16 @@ void WimuProcessor::correctBadTimestamps(QList<quint32> &timestamps, QList<quint
            diff.removeLast();
 
        for (int j=diff.count(); j>0; j--){
-           timestamps[flex_indexes.at(i)+j-1] = timestamps[flex_indexes.at(i)+j] - diff.at(j-1);
+          if ((int)flex_indexes.at(i)+j<timestamps.count() && (int)flex_indexes.at(i)+j-1 < timestamps.count())
+            timestamps[flex_indexes.at(i)+j-1] = timestamps[flex_indexes.at(i)+j] - diff.at(j-1);
+       }
+
+       if (i==0 && flex_indexes.first()==1){
+           // Check if the first timestamp is valid or not
+           if (timestamps.count()>1){
+               if ((qint32)timestamps.first()-(qint32)timestamps.at(1) > 0) // Decreasing timestamp
+                   timestamps[0] = timestamps.at(1) - 1 ;
+           }
        }
     }
 }

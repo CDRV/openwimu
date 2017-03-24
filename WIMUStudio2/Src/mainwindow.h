@@ -87,7 +87,7 @@ private slots:
     void srcFolderSelected();
 
     void wimuConfigRequested();
-    void appSettingsRequested();
+    void wimuFirmwareRequested();
 
     void clockUpdate();
 

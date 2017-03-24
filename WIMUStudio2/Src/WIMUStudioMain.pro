@@ -40,7 +40,8 @@ SOURCES += main.cpp\
            timebrowser.cpp \
            eventsbrowser.cpp \
            timeview.cpp \
-    wimulog.cpp
+    wimulog.cpp \
+    wimufirmwaredialog.cpp
 
 HEADERS  += mainwindow.h \
             wimuconfigdialog.h \
@@ -65,13 +66,15 @@ HEADERS  += mainwindow.h \
             timebrowser.h \
             eventsbrowser.h \
             timeview.h \
-    wimulog.h
+    wimulog.h \
+    wimufirmwaredialog.h
 
 FORMS    += mainwindow.ui \
             wimuconfigdialog.ui \
             sensordisplay.ui \
             timebrowser.ui \
-            eventsbrowser.ui
+            eventsbrowser.ui \
+    wimufirmwaredialog.ui
 
 #include (C:\Qwt-6.1.3\features\qwt.prf)
 CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwtd
@@ -81,11 +84,19 @@ LIBS += -lglu32 -lopengl32
 RC_ICONS = images/WIMU2.ico
 
 #Copy required files
+
+#HTML map
 extra_libs.files = $$PWD/map.html
 CONFIG(debug, debug|release): extra_libs.path = $$OUT_PWD/debug
 CONFIG(release, debug|release): extra_libs.path = $$OUT_PWD/release
 
-INSTALLS += extra_libs
+#Firmware updater
+firmware.files = $$PWD/../Utils/STM32_DFULoader/Windows/* + $$PWD/../../Firmware/WIMU3/bin/*
+CONFIG(debug, debug|release): firmware.path = $$OUT_PWD/debug/firmware
+CONFIG(release, debug|release): firmware.path = $$OUT_PWD/release/firmware
+
+INSTALLS += extra_libs \
+            firmware
 
 RESOURCES += \
     wimustudio2.qrc

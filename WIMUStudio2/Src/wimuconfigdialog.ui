@@ -578,7 +578,7 @@ QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rg
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>14</number>
         </property>
         <widget class="QWidget" name="pgEmpty"/>
         <widget class="QWidget" name="pgDateTime">

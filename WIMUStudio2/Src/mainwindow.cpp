@@ -6,6 +6,7 @@
 
 #include "wimuprocessor.h"
 #include "wimufile.h"
+#include "wimufirmwaredialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -80,7 +81,7 @@ void MainWindow::connectButtonSignals(){
     connect(ui->btnDisk,SIGNAL(clicked(bool)),this,SLOT(srcFolderSelected()));
     connect(ui->btnUSB,SIGNAL(clicked(bool)),this,SLOT(srcUSBSelected()));
     connect(ui->btnWIMUConfig,SIGNAL(clicked(bool)),this,SLOT(wimuConfigRequested()));
-    connect(ui->btnSettings,SIGNAL(clicked(bool)),this,SLOT(appSettingsRequested()));
+    connect(ui->btnFirmware,SIGNAL(clicked(bool)),this,SLOT(wimuFirmwareRequested()));
     connect(ui->btnBLEConnect,SIGNAL(clicked(bool)),this,SLOT(btnBLEDeviceConnectClicked()));
     connect(ui->btnBLERecord,SIGNAL(clicked(bool)),this,SLOT(btnBLERecordClicked()));
     connect(ui->btnBrowse,SIGNAL(clicked(bool)),this,SLOT(btnBrowseClicked()));
@@ -206,7 +207,10 @@ void MainWindow::wimuConfigRequested(){
     m_dlgWIMUConfig = NULL;
 }
 
-void MainWindow::appSettingsRequested(){
+void MainWindow::wimuFirmwareRequested(){
+    WimuFirmwareDialog firm_diag;
+
+    firm_diag.exec();
 
 }
 

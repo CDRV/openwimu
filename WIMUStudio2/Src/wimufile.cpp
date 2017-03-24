@@ -57,7 +57,9 @@ bool WIMUFile::load(bool ignore_timefile){
                 if (QFile::exists(time_name)){
                     // Load time data
                     QFile time_file(time_name);
+
                     if (time_file.open(QIODevice::ReadOnly)){
+                        m_times.reserve(time_file.size()/11);
                         while (!time_file.atEnd()){
                             QString time = time_file.readLine();
                             m_times.append(time.toUInt());
@@ -486,6 +488,8 @@ void WIMUFile::fillSamplesList(QByteArray& data, quint64 offset){
     // Fill the samples list from the ByteArray
     m_samples.clear();
     m_samplesPos.clear();
+    m_samples.reserve(data.size()/100); // Approximation
+    m_samplesPos.reserve(data.size()/100); // Approximation
     if (m_filetype==WIMU::MODULE_GPS){
         QList<QByteArray> samples = data.split((char)0xB3);
         qint64 pos = 0;

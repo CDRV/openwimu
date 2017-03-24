@@ -65,6 +65,7 @@
         <file>images/forward.png</file>
         <file>images/play.png</file>
         <file>images/stop.png</file>
+        <file>images/firmware_update.png</file>
     </qresource>
     <qresource prefix="/3d">
         <file>images/WIMU3D.obj</file>

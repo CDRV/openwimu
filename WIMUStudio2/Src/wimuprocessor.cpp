@@ -11,7 +11,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#ifdef __APPLE__
+#include <utime.h>
+#else
 #include <sys/utime.h>
+#endif
 #include <time.h>
 
 #include "wimufile.h"
@@ -1581,7 +1585,8 @@ bool WimuProcessor::isTimestampValid(const quint64 &ts){
 }
 
 void WimuProcessor::setFileModificationTime(const QString &filename, quint32 ts){
-    struct _utimbuf ut;
+
+
     QDateTime filetime;
     qint64 file_ts;
 
@@ -1602,11 +1607,19 @@ void WimuProcessor::setFileModificationTime(const QString &filename, quint32 ts)
     }
 
     //qDebug() << "** New Time = " << file_ts << QDateTime::fromSecsSinceEpoch(file_ts);
-
+#if __APPLE__
+    //TODO APPLE implementation
+    struct utimbuf ut;
+    ut.modtime = file_ts;
+    ut.actime = file_ts;
+    utime(filename.toUtf8().data(), &ut);
+#else
+    struct _utimbuf ut;
     ut.modtime = file_ts;
     ut.actime = file_ts;
 
     _utime( filename.toUtf8().data(), &ut );
+#endif
 }
 
 quint32 WimuProcessor::adjustTimeForTimeZone(quint32 ts, bool ignore_wimu_offset){

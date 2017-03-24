@@ -77,9 +77,13 @@ FORMS    += mainwindow.ui \
     wimufirmwaredialog.ui
 
 #include (C:\Qwt-6.1.3\features\qwt.prf)
-CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwtd
+#TODO - Verify debug file name for qwt
+CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwt
 CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwt
-LIBS += -lglu32 -lopengl32
+
+win32 {
+    LIBS += -lglu32 -lopengl32
+}
 
 RC_ICONS = images/WIMU2.ico
 
@@ -100,4 +104,6 @@ INSTALLS += extra_libs \
 
 RESOURCES += \
     wimustudio2.qrc
+
+
 

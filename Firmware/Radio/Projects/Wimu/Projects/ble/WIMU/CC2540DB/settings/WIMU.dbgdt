@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Project>
+  <Desktop>
+    <Static>
+      <Debug-Log>
+        
+        
+      <PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Build</Factory></Window><Window><Factory>Find-in-Files</Factory></Window><Window><Factory>Breakpoints</Factory></Window><Window><Factory>Tool-Output</Factory></Window></Windows></PreferedWindows><ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1617</ColumnWidth1></Debug-Log>
+      <Build>
+        
+        
+        
+        
+      <ColumnWidth0>20</ColumnWidth0><ColumnWidth1>1212</ColumnWidth1><ColumnWidth2>323</ColumnWidth2><ColumnWidth3>80</ColumnWidth3><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Debug-Log</Factory></Window><Window><Factory>Find-in-Files</Factory></Window><Window><Factory>Breakpoints</Factory></Window><Window><Factory>Tool-Output</Factory></Window></Windows></PreferedWindows></Build>
+      <Workspace>
+        <ColumnWidths>
+          
+          
+          
+          
+        <Column0>344</Column0><Column1>5</Column1><Column2>27</Column2><Column3>0</Column3></ColumnWidths>
+      </Workspace>
+      <Disassembly>
+        <col-names>
+          
+          
+        <item>Disassembly</item><item>_I0</item></col-names>
+        <col-widths>
+          
+          
+        <item>500</item><item>20</item></col-widths>
+        <DisasmHistory/>
+        
+        
+      <ShowCodeCoverage>1</ShowCodeCoverage><ShowInstrProfiling>1</ShowInstrProfiling><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><MixedMode>1</MixedMode><CodeCovShow>1</CodeCovShow><InstrProfShow>1</InstrProfShow></Disassembly>
+    <Find-in-Files><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Debug-Log</Factory></Window><Window><Factory>Build</Factory></Window><Window><Factory>Breakpoints</Factory></Window><Window><Factory>Tool-Output</Factory></Window></Windows></PreferedWindows><ColumnWidth0>664</ColumnWidth0><ColumnWidth1>94</ColumnWidth1><ColumnWidth2>1138</ColumnWidth2></Find-in-Files><CallStack><PreferedWindows><Position>1</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><ViewArgs>1</ViewArgs></CallStack><Watch><Format><struct_types><Fmt><Key>gattAttrType_t-len</Key><Value>3</Value></Fmt><Fmt><Key>gattAttrType_t-uuid</Key><Value>4</Value></Fmt><Fmt><Key>struct attAttribute_t-pValue</Key><Value>4</Value></Fmt><Fmt><Key>struct attAttribute_t-permissions</Key><Value>4</Value></Fmt></struct_types><watch_formats><Fmt><Key>{W}Watch-0:*pLen</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:WIMU_GPS_LOCATION_AND_SPEED_PACKET_SIZE</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:currentTime</Key><Value>3</Value><ShowAs>2</ShowAs></Fmt><Fmt><Key>{W}Watch-0:gpsNavigationData</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:numBytes</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:rx_byte[4]</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:rx_byte[5]</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-0:rx_index</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:rx_len</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-0:status</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-2:*pLen</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-2:*pValue</Key><ShowAs>6</ShowAs></Fmt><Fmt><Key>{W}Watch-2:GPS_POSITION_QUALITY_UUID</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-2:pAttr</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-2:pValue</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-2:pValue[1]</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-2:pValue[7]</Key><Value>4</Value></Fmt><Fmt><Key>{W}Watch-2:uuid</Key><Value>2</Value></Fmt><Fmt><Key>{W}Watch-3:*pLen </Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-3:WIMU_ACTIMETRY_PACKET_SIZE</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-3:WIMU_GPS_POSITION_QUALITY_PACKET_SIZE</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-3:maxLen</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-3:nb</Key><Value>3</Value></Fmt><Fmt><Key>{W}Watch-3:pValue</Key><Value>4</Value></Fmt></watch_formats></Format><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><Column0>221</Column0><Column1>376</Column1><Column2>100</Column2><Column3>100</Column3></Watch><Locals><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><Column0>103</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></Locals><Tool-Output><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Debug-Log</Factory></Window><Window><Factory>Build</Factory></Window><Window><Factory>Find-in-Files</Factory></Window><Window><Factory>Breakpoints</Factory></Window></Windows></PreferedWindows></Tool-Output><Memory><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><FindDirection>1</FindDirection><FindAsHex>0</FindAsHex></Memory><QuickWatch><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><Column0>100</Column0><Column1>224</Column1><Column2>100</Column2><Column3>100</Column3></QuickWatch><Breakpoints><PreferedWindows><Position>3</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows><Window><Factory>Debug-Log</Factory></Window><Window><Factory>Build</Factory></Window><Window><Factory>Find-in-Files</Factory></Window><Window><Factory>Tool-Output</Factory></Window></Windows></PreferedWindows></Breakpoints><TerminalIO><PreferedWindows><Position>2</Position><ScreenPosX>0</ScreenPosX><ScreenPosY>0</ScreenPosY><Windows/></PreferedWindows><InputSource>1</InputSource><InputMode>10</InputMode><Filename>$PROJ_DIR$\TermIOInput.txt</Filename><InputEcho>1</InputEcho><ShowReset>0</ShowReset></TerminalIO></Static>
+    <Windows>
+      
+      
+      
+    <Wnd0>
+        <Tabs>
+          <Tab>
+            <Identity>TabID-10255-24664</Identity>
+            <TabName>Workspace</TabName>
+            <Factory>Workspace</Factory>
+            <Session>
+              
+            <NodeDict><ExpandedNode>WIMU</ExpandedNode><ExpandedNode>WIMU/APP</ExpandedNode><ExpandedNode>WIMU/HAL</ExpandedNode><ExpandedNode>WIMU/HAL/Target</ExpandedNode><ExpandedNode>WIMU/HAL/Target/CC2540EB</ExpandedNode><ExpandedNode>WIMU/HAL/Target/CC2540EB/Drivers</ExpandedNode><ExpandedNode>WIMU/LIB</ExpandedNode><ExpandedNode>WIMU/Output</ExpandedNode><ExpandedNode>WIMU/PROFILES</ExpandedNode></NodeDict></Session>
+          </Tab>
+        </Tabs>
+        
+      <SelectedTab>0</SelectedTab></Wnd0><Wnd5><Tabs><Tab><Identity>TabID-20238-8153</Identity><TabName>Debug Log</TabName><Factory>Debug-Log</Factory><Session/></Tab><Tab><Identity>TabID-16109-7541</Identity><TabName>Breakpoints</TabName><Factory>Breakpoints</Factory></Tab><Tab><Identity>TabID-23607-2446</Identity><TabName>Find in Files</TabName><Factory>Find-in-Files</Factory><Session/></Tab><Tab><Identity>TabID-14904-13667</Identity><TabName>Terminal I/O</TabName><Factory>TerminalIO</Factory><Session/></Tab></Tabs><SelectedTab>3</SelectedTab></Wnd5><Wnd6><Tabs><Tab><Identity>TabID-27188-18875</Identity><TabName>Call Stack</TabName><Factory>CallStack</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd6><Wnd7><Tabs><Tab><Identity>TabID-26842-28079</Identity><TabName>Memory</TabName><Factory>Memory</Factory><Session><ZoneNumber>1</ZoneNumber><SelectionAnchor>3239</SelectionAnchor><SelectionEnd>3239</SelectionEnd><UnitsPerGroup>1</UnitsPerGroup><EndianMode>0</EndianMode><DataCovEnabled>0</DataCovEnabled><DataCovShown>0</DataCovShown><AutoRefresh>0</AutoRefresh><HScroll>0</HScroll><VScroll>197</VScroll></Session></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd7><Wnd9><Tabs><Tab><Identity>TabID-10574-4217</Identity><TabName>Locals</TabName><Factory>Locals</Factory><Session><Column0>103</Column0><Column1>100</Column1><Column2>100</Column2><Column3>100</Column3></Session></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd9><Wnd1><Tabs><Tab><Identity>TabID-3778-21417</Identity><TabName>Disassembly</TabName><Factory>Disassembly</Factory><Session/></Tab></Tabs><SelectedTab>0</SelectedTab></Wnd1></Windows>
+    <Editor>
+      
+      
+      
+      
+    <Pane><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\GPS\gpsservice.h</Filename><XPos>0</XPos><YPos>9</YPos><SelStart>1021</SelStart><SelEnd>1021</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\Batt\battservice.h</Filename><XPos>0</XPos><YPos>167</YPos><SelStart>2775</SelStart><SelEnd>2816</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\TimeService\timeservice.h</Filename><XPos>0</XPos><YPos>81</YPos><SelStart>1415</SelStart><SelEnd>1428</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\util\WIMU\wimu_util.h</Filename><XPos>0</XPos><YPos>124</YPos><SelStart>3441</SelStart><SelEnd>3453</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\Source\wimu.h</Filename><XPos>0</XPos><YPos>3</YPos><SelStart>725</SelStart><SelEnd>725</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\..\COMPONENTS\hal\target\CC2540EB\hal_uart.c</Filename><XPos>0</XPos><YPos>108</YPos><SelStart>5389</SelStart><SelEnd>5389</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\..\COMPONENTS\hal\target\CC2540EB\_hal_uart_dma.c</Filename><XPos>0</XPos><YPos>876</YPos><SelStart>28932</SelStart><SelEnd>28932</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\TimeService\timeservice.c</Filename><XPos>0</XPos><YPos>233</YPos><SelStart>7152</SelStart><SelEnd>7185</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\DevInfo\devinfoservice.h</Filename><XPos>0</XPos><YPos>114</YPos><SelStart>4238</SelStart><SelEnd>4238</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\DevInfo\devinfoservice.c</Filename><XPos>0</XPos><YPos>348</YPos><SelStart>5484</SelStart><SelEnd>5484</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\Source\wimu.c</Filename><XPos>0</XPos><YPos>683</YPos><SelStart>20880</SelStart><SelEnd>20880</SelEnd></Tab><ActiveTab>10</ActiveTab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\GPS\gpsservice.c</Filename><XPos>0</XPos><YPos>327</YPos><SelStart>11504</SelStart><SelEnd>11504</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\Source\WIMU_Main.c</Filename><XPos>0</XPos><YPos>33</YPos><SelStart>1548</SelStart><SelEnd>1548</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\ACTIMETRY\actimetryservice.c</Filename><XPos>0</XPos><YPos>650</YPos><SelStart>18073</SelStart><SelEnd>18073</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\Actimetry\actimetryservice.h</Filename><XPos>0</XPos><YPos>27</YPos><SelStart>1097</SelStart><SelEnd>1097</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\Profiles\Batt\battservice.c</Filename><XPos>0</XPos><YPos>368</YPos><SelStart>11737</SelStart><SelEnd>11737</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\..\COMPONENTS\osal\common\OSAL.c</Filename><XPos>0</XPos><YPos>1092</YPos><SelStart>29017</SelStart><SelEnd>29017</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\..\COMPONENTS\osal\common\OSAL_ClockBLE.c</Filename><XPos>0</XPos><YPos>142</YPos><SelStart>5833</SelStart><SelEnd>5833</SelEnd></Tab><Tab><Factory>TextEditor</Factory><Filename>$WS_DIR$\..\..\..\..\COMPONENTS\osal\common\OSAL_Timers.c</Filename><XPos>0</XPos><YPos>446</YPos><SelStart>12783</SelStart><SelEnd>12783</SelEnd></Tab></Pane><ActivePane>0</ActivePane><Sizes><Pane><X>1000000</X><Y>1000000</Y></Pane></Sizes><SplitMode>1</SplitMode></Editor>
+    <Positions>
+      
+      
+      
+      
+      
+    <Top><Row0><Sizes><Toolbar-026b9438><key>iaridepm.enu1</key></Toolbar-026b9438></Sizes></Row0><Row1><Sizes><Toolbar-093b0eb8><key>debuggergui.enu1</key></Toolbar-093b0eb8></Sizes></Row1></Top><Left><Row0><Sizes><Wnd0><Rect><Top>-2</Top><Left>-2</Left><Bottom>427</Bottom><Right>413</Right><x>-2</x><y>-2</y><xscreen>229</xscreen><yscreen>212</yscreen><sizeHorzCX>119271</sizeHorzCX><sizeHorzCY>212425</sizeHorzCY><sizeVertCX>216146</sizeVertCX><sizeVertCY>429860</sizeVertCY></Rect></Wnd0></Sizes></Row0><Row1><Sizes><Wnd6><Rect><Top>-2</Top><Left>411</Left><Bottom>427</Bottom><Right>585</Right><x>411</x><y>-2</y><xscreen>270</xscreen><yscreen>284</yscreen><sizeHorzCX>140625</sizeHorzCX><sizeHorzCY>284569</sizeHorzCY><sizeVertCX>90625</sizeVertCX><sizeVertCY>429860</sizeVertCY></Rect></Wnd6></Sizes></Row1></Left><Right><Row0><Sizes><Wnd9><Rect><Top>-2</Top><Left>-2</Left><Bottom>427</Bottom><Right>268</Right><x>-2</x><y>-2</y><xscreen>270</xscreen><yscreen>284</yscreen><sizeHorzCX>140625</sizeHorzCX><sizeHorzCY>284569</sizeHorzCY><sizeVertCX>140625</sizeVertCX><sizeVertCY>429860</sizeVertCY></Rect></Wnd9></Sizes></Row0><Row1><Sizes><Wnd1><Rect><Top>-2</Top><Left>266</Left><Bottom>427</Bottom><Right>466</Right><x>266</x><y>-2</y><xscreen>200</xscreen><yscreen>200</yscreen><sizeHorzCX>104167</sizeHorzCX><sizeHorzCY>200401</sizeHorzCY><sizeVertCX>104167</sizeVertCX><sizeVertCY>429860</sizeVertCY></Rect></Wnd1></Sizes></Row1></Right><Bottom><Row0><Sizes><Wnd5><Rect><Top>-2</Top><Left>-2</Left><Bottom>220</Bottom><Right>1922</Right><x>-2</x><y>-2</y><xscreen>1924</xscreen><yscreen>222</yscreen><sizeHorzCX>1002083</sizeHorzCX><sizeHorzCY>222445</sizeHorzCY><sizeVertCX>104167</sizeVertCX><sizeVertCY>223447</sizeVertCY></Rect></Wnd5></Sizes></Row0><Row1><Sizes><Wnd7><Rect><Top>218</Top><Left>-2</Left><Bottom>502</Bottom><Right>1922</Right><x>-2</x><y>218</y><xscreen>1924</xscreen><yscreen>284</yscreen><sizeHorzCX>1002083</sizeHorzCX><sizeHorzCY>284569</sizeHorzCY><sizeVertCX>140625</sizeVertCX><sizeVertCY>284569</sizeVertCY></Rect></Wnd7></Sizes></Row1></Bottom><Float><Sizes/></Float></Positions>
+  </Desktop>
+</Project>
+
+

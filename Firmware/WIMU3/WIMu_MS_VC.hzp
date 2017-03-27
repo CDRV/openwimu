@@ -1,0 +1,111 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="WIMU3" target="8" version="2">
+  <project Name="WIMU3">
+    <configuration Name="Common" Placement="Flash" Target="STM32L151RD" arm_architecture="v7M" arm_core_type="Cortex-M3" arm_fpu_type="None" arm_gcc_target="arm-unknown-eabi" arm_linker_heap_size="1024" arm_linker_jtag_pad_pre_dr="1" arm_linker_jtag_pad_pre_ir="5" arm_linker_process_stack_size="1024" arm_linker_stack_size="1024" arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory.dll" arm_simulator_memory_simulation_parameter="STM32L151RD;0x60000;0xC000" arm_target_debug_interface_type="ADIv5" arm_target_interface_type="Default" arm_target_loader_applicable_loaders="Flash" arm_target_loader_default_loader="Flash" c_preprocessor_definitions="USE_STDPERIPH_DRIVER;EN_SOFT_WATCHDOG;STARTUP_FROM_RESET" c_user_include_directories="$(SolutionDir)/Libraries/CMSIS/Device/ST/STM32L1xx/Include;$(SolutionDir)/inc;$(SolutionDir)/Libraries/STM32L1xx_StdPeriph_Driver/inc;$(SolutionDir)/Libraries/STM32_USB-FS-Device_Driver/inc;$(SolutionDir)/Libraries/FatFs/src;$(SolutionDir)/STM32_EVAL/Common;$(SolutionDir)/STM32_EVAL/STM32L152_EVAL;$(SolutionDir)/Libraries/CMSIS/include." gcc_enable_all_warnings="Yes" gcc_optimization_level="None" linker_memory_map_file="$(TargetsDir)/STM32/STM32L151RD_MemoryMap.xml" linker_output_format="bin" linker_printf_fmt_level="long long" linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml" project_directory="" project_type="Executable" property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml" target_get_partname_script="GetPartName()" target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)" target_reset_script="Reset()" target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)"/>
+    <configuration Name="Flash" arm_target_flash_loader_file_path="$(TargetsDir)/STM32/Release/STM32L_Loader_rpc.elf" arm_target_flash_loader_type="LIBMEM RPC Loader" arm_target_loader_can_erase_all="No" arm_target_loader_can_lock_all="No" arm_target_loader_can_lock_range="No" arm_target_loader_can_unlock_all="No" arm_target_loader_can_unlock_range="No" target_reset_script="FLASHReset()"/>
+    <folder Name="Source Files" file_name="">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc"/>
+      <file file_name="src/MS__mass_mal.c">
+        <configuration Name="Common" c_user_include_directories=""/>
+      </file>
+      <file file_name="src/MS__memory.c"/>
+      <file file_name="src/MS__scsi_data.c"/>
+      <file file_name="src/MS__usb_bot.c"/>
+      <file file_name="src/MS__usb_desc.c"/>
+      <file file_name="src/MS__usb_prop.c"/>
+      <file file_name="src/MS__usb_scsi.c"/>
+      <file file_name="src/main.c"/>
+      <file file_name="src/system_stm32l1xx.c"/>
+      <file file_name="src/usb_istr.c"/>
+      <file file_name="src/VC__usb_desc.c"/>
+      <file file_name="src/usb_pwr.c"/>
+      <file file_name="src/Merged__hw_config.c"/>
+      <file file_name="src/VC__usb_prop.c"/>
+      <file file_name="src/Merged__stm32_it.c"/>
+      <file file_name="src/diskio.c"/>
+      <file file_name="src/RTC.c"/>
+      <file file_name="src/watchdog.c"/>
+      <file file_name="src/FIFO.c"/>
+      <file file_name="src/SPI_driver.c"/>
+      <file file_name="src/utils.c"/>
+      <file file_name="src/battery.c"/>
+      <file file_name="src/flash.c"/>
+      <file file_name="src/I2C_driver.c"/>
+      <file file_name="src/MPUCompass_driver.c"/>
+      <file file_name="src/GPS_driver.c"/>
+      <file file_name="src/gps.c"/>
+      <file file_name="src/datalogger.c"/>
+      <file file_name="src/ble.c"/>
+      <file file_name="inc/ble.h"/>
+      <file file_name="src/power.c"/>
+      <file file_name="src/imu.c"/>
+      <file file_name="src/buttons.c"/>
+      <file file_name="src/buttons.h"/>
+      <file file_name="src/usb.c"/>
+      <file file_name="src/usb_endp.c"/>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(StudioDir)/source/thumb_crt0.s"/>
+      <file file_name="$(TargetsDir)/STM32/STM32_Startup.s"/>
+      <file file_name="$(TargetsDir)/STM32/STM32_Target.js">
+        <configuration Name="Common" file_type="Reset Script"/>
+      </file>
+    </folder>
+    <folder Name="LIB_USB">
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_cal.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_dev.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_int.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_pcd.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_core.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_init.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_int.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_mem.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_regs.c"/>
+      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_sil.c"/>
+    </folder>
+    <folder Name="LIB_STD" file_name="">
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/misc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_adc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_aes.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_aes_util.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_comp.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_crc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_dac.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_dbgmcu.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_dma.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_exti.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_flash.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_flash_ramfunc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_fsmc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_gpio.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_i2c.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_iwdg.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_lcd.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_opamp.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_pwr.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_rcc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_rtc.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_sdio.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_spi.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_syscfg.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_tim.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_usart.c"/>
+      <file file_name="Libraries/STM32L1xx_StdPeriph_Driver/src/stm32l1xx_wwdg.c"/>
+    </folder>
+    <folder Name="STM32_EVAL">
+      <file file_name="STM32_EVAL/STM32L152_EVAL/stm32l152_eval.c"/>
+      <file file_name="STM32_EVAL/STM32L152_EVAL/stm32l152_eval_spi_sd.c"/>
+    </folder>
+    <folder Name="LIB_FatFs" file_name="">
+      <file file_name="Libraries/FatFs/src/ff.c"/>
+    </folder>
+    <configuration Name="Debug" linker_output_format="bin"/>
+    <configuration Name="Release" gcc_optimization_level="Level 3"/>
+    <configuration Name="WIMU3 Debug" c_preprocessor_definitions="" linker_additional_files="" linker_printf_fp_enabled="No"/>
+  </project>
+  <configuration Name="THUMB" Platform="ARM" arm_instruction_set="THUMB" arm_library_instruction_set="THUMB" c_preprocessor_definitions="__THUMB" hidden="Yes"/>
+  <configuration Name="Debug" arm_architecture="v7M" arm_core_type="Cortex-M3" c_preprocessor_definitions="DEBUG" gcc_debugging_level="Level 2" gcc_optimization_level="None" hidden="Yes" linker_output_format="srec"/>
+  <configuration Name="Release" arm_architecture="v7M" arm_core_type="Cortex-M3" c_preprocessor_definitions="NDEBUG" gcc_debugging_level="Level 1" gcc_optimization_level="Level 3" hidden="Yes" linker_output_format="bin"/>
+  <configuration Name="WIMU3 Debug" c_preprocessor_definitions="" c_user_include_directories="$(ProjectDir)/Libraries/CMSIS/DSP_Lib/Examples/arm_linear_interp_example/ARM;." inherited_configurations="Debug" linker_additional_files="$(ProjectDir)/Libraries/CMSIS/Lib/ARM/arm_cortexM3l_math.lib" linker_output_format="bin"/>
+  <configuration Name="WIMU3 Release" inherited_configurations=""/>
+</solution>

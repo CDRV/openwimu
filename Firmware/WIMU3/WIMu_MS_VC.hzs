@@ -1,0 +1,98 @@
+<!DOCTYPE CrossStudio_for_ARM_Session_File>
+<session>
+ <Bookmarks>
+  <BookmarkItem column="-1" line="51" path="Z:\Simon_Dev\WIMuGPS\Workspace\WIMU2\src\MPUCompass_driver.c" number="8" extra="NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;" name="unnamed" color="5" />
+ </Bookmarks>
+ <Breakpoints/>
+ <ExecutionProfileWindow/>
+ <Memory1>
+  <MemoryWindow autoEvaluate="0" addressText="0x20002d00" numColumns="8" sizeText="24" dataSize="1" radix="16" name="WIMu_MS_VC" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="0x20004cdc" numColumns="8" sizeText="1" dataSize="2" radix="16" name="WIMU2" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="0x1FF800FA" numColumns="8" sizeText="2" dataSize="2" radix="16" name="WIMU3" addressSpace="" />
+ </Memory1>
+ <Memory2>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMu_MS_VC" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMU2" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMU3" addressSpace="" />
+ </Memory2>
+ <Memory3>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMu_MS_VC" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMU2" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMU3" addressSpace="" />
+ </Memory3>
+ <Memory4>
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMu_MS_VC" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMU2" addressSpace="" />
+  <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="WIMU3" addressSpace="" />
+ </Memory4>
+ <Project>
+  <ProjectSessionItem path="WIMU3" name="unnamed" />
+ </Project>
+ <Register1>
+  <RegisterWindow openNodes="" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU;USART3;CRC" decimalNodes="" octalNodes="" asciiNodes="" name="WIMu_MS_VC" />
+  <RegisterWindow openNodes="DMA1/CCR7;GPIOB/IDR;I2C1/CR1;I2C1/CR2;I2C1/DR;I2C1/SR1;I2C1/SR2;I2C1/CCR;I2C1/TRISE" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="I2C1;GPIOB;DMA1" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU2" />
+  <RegisterWindow openNodes="EXTI;EXTI/IMR;EXTI/PR" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU3" />
+ </Register1>
+ <Register2>
+  <RegisterWindow openNodes="CPU - Current Context" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="WIMu_MS_VC" />
+  <RegisterWindow openNodes="CPU" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU2" />
+  <RegisterWindow openNodes="CPU - Current Context" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU - Current Context;CPU" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU3" />
+ </Register2>
+ <Register3>
+  <RegisterWindow openNodes="CPU - Current Context" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="WIMu_MS_VC" />
+  <RegisterWindow openNodes="CPU" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU2" />
+  <RegisterWindow openNodes="CPU - Current Context" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU - Current Context;CPU" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU3" />
+ </Register3>
+ <Register4>
+  <RegisterWindow openNodes="CPU - Current Context" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="WIMu_MS_VC" />
+  <RegisterWindow openNodes="CPU" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU2" />
+  <RegisterWindow openNodes="CPU - Current Context" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="CPU - Current Context;CPU" decimalNodes="" octalNodes="" asciiNodes="" name="WIMU3" />
+ </Register4>
+ <TargetWindow programAction="" uploadFileType="" programLoadAddress="" programSize="" uploadFileName="" uploadMemoryInterface="" programFileName="" uploadStartAddress="" programFileType="" uploadSize="" programMemoryInterface="" />
+ <TraceWindow>
+  <Trace enabled="Yes" />
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" update="Each Second" >
+   <Watchpoint linenumber="0" radix="11" name="timestamp" expression="timestamp" filename="" />
+   <Watchpoint evalMode="2" linenumber="0" numelements="2" evalType="0" radix="11" name="BatteryTemp_ADC" expression="BatteryTemp_ADC" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="wimu_config" expression="wimu_config" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="bDeviceState" expression="bDeviceState" filename="" />
+   <Watchpoint evalMode="2" linenumber="0" numelements="10" evalType="0" radix="16" name="i_mod_status" expression="i_mod_status" filename="" />
+   <Watchpoint linenumber="0" radix="-1" name="wimu_settings" expression="wimu_settings" filename="" />
+   <Watchpoint linenumber="0" radix="11" name="dos_split_ts" expression="dos_split_ts" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="power_is_stopped" expression="power_is_stopped" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="power_state" expression="power_state" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="last_power_state" expression="last_power_state" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="power_is_charging" expression="power_is_charging" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="ble_control" expression="ble_control" filename="" />
+   <Watchpoint evalMode="2" linenumber="0" numelements="128" evalType="0" radix="1" name="usb_rx[usb_rx_rd_ptr]" expression="usb_rx[usb_rx_rd_ptr]" filename="" />
+  </Watches>
+ </Watch1>
+ <Watch2>
+  <Watches active="0" update="Never" />
+ </Watch2>
+ <Watch3>
+  <Watches active="0" update="Never" />
+ </Watch3>
+ <Watch4>
+  <Watches active="0" update="Never" />
+ </Watch4>
+ <Files>
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\main.c" y="383" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\main.c" left="0" selected="0" name="unnamed" top="356" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\usb.c" y="577" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\usb.c" left="0" selected="0" name="unnamed" top="547" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\inc\config.h" y="76" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\inc\config.h" left="0" selected="0" name="unnamed" top="49" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="53" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\power.c" y="214" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\power.c" left="0" selected="1" name="unnamed" top="180" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\Merged__stm32_it.c" y="269" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\Merged__stm32_it.c" left="0" selected="0" name="unnamed" top="232" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\inc\power.h" y="91" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\inc\power.h" left="0" selected="0" name="unnamed" top="69" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\main.h" y="0" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\main.h" left="0" selected="0" name="unnamed" top="60" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\inc\battery.h" y="0" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\inc\battery.h" left="0" selected="0" name="unnamed" top="18" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\utils.c" y="893" path="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src\utils.c" left="0" selected="0" name="unnamed" top="875" />
+ </Files>
+ <ARMCrossStudioWindow activeProject="WIMU3" autoConnectTarget="USB CrossConnect for ARM" debugSearchFileMap="\Volumes\HD2\products\build\crossworks\arm\crossworks_v2\shared\target\libc\arm\__int64_udivmod.s
+
+\Volumes\HD2\products\build\crossworks\arm\crossworks_v2\shared\target\libc\arm\memcpy.asm
+
+\Volumes\HD2\products\build\crossworks\arm\crossworks_v2\shared\target\libc\arm\strlen.asm
+" fileDialogInitialDirectory="D:\Simon_Dev\WIMuGPS\Workspace\WIMU3\STM32\src" fileDialogDefaultFilter="*.c" autoConnectCapabilities="264063" debugSearchPath="" buildConfiguration="WIMU3 Debug" />
+</session>

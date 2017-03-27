@@ -1,0 +1,91 @@
+[Stack]
+FillEnabled=0
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnLogOnly=1
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[DebugChecksum]
+Checksum=-1029487085
+[CallStack]
+ShowArgs=0
+[Disassembly]
+MixedMode=1
+[CallStackLog]
+Enabled=0
+[DriverProfiling]
+Enabled=0
+Mode=1
+Graph=0
+Symbiont=0
+Exclusions=
+[InterruptLog]
+LogEnabled=0
+SumEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=1
+SumSortOrder=0
+[DataLog]
+LogEnabled=0
+SumEnabled=0
+GraphEnabled=0
+ShowTimeLog=1
+ShowTimeSum=1
+[Breakpoints2]
+Count=0
+[Interrupts]
+Enabled=1
+[MemoryMap]
+Enabled=0
+Base=0
+UseAuto=0
+TypeViolation=1
+UnspecRange=1
+ActionState=1
+[Trace1]
+Enabled=0
+ShowSource=1
+[DisAssemblyWindow]
+NumStates=_ 1
+State 1=_ 1
+[InstructionProfiling]
+Enabled=_ 0
+[CodeCoverage]
+Enabled=_ 0
+[StackPlugin]
+Enabled=1
+OverflowWarningsEnabled=1
+WarningThreshold=90
+SpWarningsEnabled=1
+WarnHow=1
+UseTrigger=1
+TriggerName=main
+LimitSize=0
+ByteLimit=50
+[RegisterFilter]
+FilePath=_ ""
+UseFilter=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
+[Breakpoints]
+Count=0
+[ChipconEmu]
+Stop timers on halt=0
+Leave target running=1
+[Aliases]
+A0=_ "C:\Workspace\Etudiants_Bretagne\Projects\ble\Profiles\SensorProfile\st_util.c" "E:\BLE\Projects\Wimu\Projects\ble\Profiles\SensorProfile\st_util.c"
+A1=_ "E:\BLE\Projects\Wimu\Projects\ble\WIMU\Source\WIMU_Main.c" "\\VBOXSVR\Stage_CdRV\WIMU3\BLE\Projects\Wimu\Projects\ble\WIMU\Source\WIMU_Main.c"
+A2=_ "Z:\BLE\Projects\Wimu\Components\hal\target\CC2540EB\hal_led.c" ""
+A3=_ "Z:\BLE\Projects\Wimu\Components\osal\common\OSAL_PwrMgr.c" ""
+A4=_ "Z:\BLE\Projects\Wimu\Projects\ble\WIMU\Source\WIMU_Main.c" "E:\BLE\Projects\Wimu\Projects\ble\WIMU\Source\WIMU_Main.c"
+Count=5
+SuppressDialog=1

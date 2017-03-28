@@ -2,18 +2,18 @@ Authors:
 - Simon Brière
 
 Many wireless inertial measurement systems are commercially available. However, with those systems, it is usually complex to add new features, sensing capabilities and parameters customizations. The OpenWIMU project was created to address those limitations. More specifically:
+  
+  * To provide an open hardware platform with the following capabilities:
+    - Complete inertial system (based on 3D accelerometer, gyrometer and magnetometer) with sampling rate from 50 Hz to 200Hz
+    - Wireless data tranmission and control
+    - Embedded GPS module for activity monitoring
+    - Datalogging capabilities for at least a day without charging of all the embedded sensor data in a long-term scope recording (a few weeks)
+    - Ability to connect external sensors to the platform
+    - - Ease of use for the user
 
-    To provide an open hardware platform with the following capabilities:
-        Complete inertial system (based on 3D accelerometer, gyrometer and magnetometer) with sampling rate from 50 Hz to 200Hz
-        Wireless data tranmission and control
-        Embedded GPS module for activity monitoring
-        Datalogging capabilities for at least a day without charging of all the embedded sensor data in a long-term scope recording (a few weeks)
-        Ability to connect external sensors to the platform
-        Ease of use for the user
-
-    To provide an open software environment with the following capabilities:
-        Data vizualization interface, from a device connected using an USB interface, wireless stream or recorded (files) stream
-        Data pre-processing function, allowing to correctly split and correct timestamps from long-term recordings and display a temporal mapping of the data
-        Module configuration and firmware upgrading
+   * To provide an open software environment with the following capabilities:
+     - Data vizualization interface, from a device connected using an USB interface, wireless stream or recorded (files) stream
+     - Data pre-processing function, allowing to correctly split and correct timestamps from long-term recordings and display a temporal mapping of the data
+     - Module configuration and firmware upgrading
 
 WIMU is a diminutive of WIMUGPS, which stands for "Wireless Inertial Measurement Unit with Global Positionning System".

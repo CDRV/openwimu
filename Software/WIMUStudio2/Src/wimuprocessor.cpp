@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#ifdef __APPLE__
+#if defined (__APPLE__) || defined(__linux__)
 #include <utime.h>
 #else
 #include <sys/utime.h>
@@ -1607,7 +1607,7 @@ void WimuProcessor::setFileModificationTime(const QString &filename, quint32 ts)
     }
 
     //qDebug() << "** New Time = " << file_ts << QDateTime::fromSecsSinceEpoch(file_ts);
-#if __APPLE__
+#if defined (__APPLE__) || defined(__linux__)
     //TODO APPLE implementation
     struct utimbuf ut;
     ut.modtime = file_ts;

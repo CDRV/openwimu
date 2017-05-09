@@ -31,7 +31,9 @@ bool WIMUBLEDriver::bledFindAndPrepare(){
 		QList<QSerialPortInfo> list = QSerialPortInfo::availablePorts();
         m_portName = "";
 		for(int i = 0;i<list.length();i++){
-		   if(list.at(i).description().contains("Bluegiga", Qt::CaseInsensitive)){
+           qDebug() << list.at(i).description();
+           if(list.at(i).description().contains("Bluegiga", Qt::CaseInsensitive)
+                   || list.at(i).description().contains("Low Energy Dongle", Qt::CaseInsensitive)){
 			   if(list.at(i).isBusy()){
                    m_lastErrorStr = "Port COM " + list.at(i).portName() + " occupé.";
                    return false;

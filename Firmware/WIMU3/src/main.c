@@ -31,7 +31,7 @@ WIMU_SETTINGS wimu_settings;
 WIMU_CONFIG wimu_config;
 
 // Data management
-bool initialized = FALSE;
+bool initialized = false;
 bool first_time_init = true;
 int16_t dataToWrite[MAX_FS*3];  //Memory buffer to write 3-axis data
 int8_t dataGPSToWrite[200];
@@ -330,20 +330,27 @@ bool Main_Init(void){
   setModuleState(MODULE_POWER, STATE_OFFLINE);  // Always enable Power Module
 
    // Manually control each module for test
-  /*setModuleState(MODULE_ACC, STATE_DISABLED);
-  setModuleState(MODULE_GYRO, STATE_DISABLED);
+  /*setModuleState(MODULE_ACC, STATE_OFFLINE);
+  setModuleState(MODULE_GYRO, STATE_OFFLINE);
   setModuleState(MODULE_MAGNETO, STATE_DISABLED);
-  setModuleState(MODULE_DATALOGGER, STATE_DISABLED);
+  setModuleState(MODULE_DATALOGGER, STATE_OFFLINE);
   setModuleState(MODULE_GPS, STATE_DISABLED);
   setModuleState(MODULE_BLE, STATE_DISABLED);
 
-  wimu_config.ui.write_led = true;*/
+  wimu_config.ui.write_led = true;
+  wimu_config.general.sampling_rate = 500;
+
+  setModuleState(MODULE_IMU, STATE_OFFLINE);*/
 
  // Enable IMU module if at least Acc and Gyro modules are enabled
-  if (getModuleState(MODULE_ACC)==STATE_OFFLINE && getModuleState(MODULE_GYRO)==STATE_OFFLINE){
-    setModuleState(MODULE_IMU, STATE_OFFLINE);
-  }else
-    setModuleState(MODULE_IMU, STATE_DISABLED);
+ if (getModuleState(MODULE_IMU)==STATE_OFFLINE){
+   if (getModuleState(MODULE_ACC)==STATE_OFFLINE && getModuleState(MODULE_GYRO)==STATE_OFFLINE){
+      setModuleState(MODULE_IMU, STATE_OFFLINE);
+    }else
+      setModuleState(MODULE_IMU, STATE_DISABLED);
+ }
+
+    
 
   //////////////////////////////
   // Variables initialization
@@ -361,6 +368,7 @@ bool Main_Init(void){
 
 // Start every modules
 void Main_Start(){
+  initialized = false;
   Main_Init();
 
   led(LED_GREEN, TRUE, MEDIUM_PRIORITY);
@@ -382,8 +390,9 @@ void Main_Start(){
   //}
 
   ChargeStat_Config();
+  led(LED_GREEN, TRUE, MEDIUM_PRIORITY);
   PushButton_SetInterrupt(&ModeButton, ENABLE);
-
+  
   update_timestampRTC();
   if (Main_StartModules()==false){
     //Error happened in the initialization sequence
@@ -409,7 +418,7 @@ void Main_Stop(bool enter_stop_mode){
 
   //Shutdown every module, except USB and power
   for (i=0; i<MODULE_INTERNAL_NUM; i++){
-    if (i != MODULE_USB && i != MODULE_POWER && i!=MODULE_CPU)
+    if (i != MODULE_USB && i != MODULE_POWER && i!=MODULE_CPU/* && i!=MODULE_DATALOGGER*/)
       Main_Shutdown(i);
    }
    if (enter_stop_mode)
@@ -457,7 +466,13 @@ void Main_Stop(bool enter_stop_mode){
         }
         
      }
+
+    // Restart USB
+    USB_GlobalInit();
+    USB_Start();
    }
+
+   initialized = true;
 }
 
 
@@ -584,6 +599,8 @@ bool Main_StartModules(void){
        if (wimu_config.general.sampling_rate==50)   MPUCompass_CompassSetFreq(MPUCOMPASS_50Hz);
        if (wimu_config.general.sampling_rate==100)  MPUCompass_CompassSetFreq(MPUCOMPASS_100Hz);
        if (wimu_config.general.sampling_rate==200)  MPUCompass_CompassSetFreq(MPUCOMPASS_200Hz);
+       if (wimu_config.general.sampling_rate==500)  MPUCompass_CompassSetFreq(MPUCOMPASS_500Hz);
+       if (wimu_config.general.sampling_rate==1000)  MPUCompass_CompassSetFreq(MPUCOMPASS_1000Hz);
 
        if (isModuleOnline(MODULE_ACC) || isModuleOnline(MODULE_GYRO))
         MPUCompass_CompassSync();
@@ -1200,91 +1217,10 @@ void main_buttons(void){
 
     switch(PowerButton.RequestedAction){
     case BTN_ON_OFF:
-      /*//Light all LED
-      led(LED_RED,TRUE, HIGH_PRIORITY);
-      led(LED_GREEN,TRUE, HIGH_PRIORITY);
-      led(LED_BLUE,TRUE, HIGH_PRIORITY);
-
-      Buzzer_Start(200);
-      
-      sprintf(buf, "WIMUGPS Off\r\n");
-      if (isModuleOnline(MODULE_DATALOGGER)){
-        datalog_save_data((unsigned char*)&buf[0],13, TRUE, MODULE_CPU,0);
-        msWait(200);
-      }*/
 
       if (Power_StateUpdate()){
         Main_ManageNewPowerState();
       }
-
-      //Shutdown every module, except USB and power
-      /*for (i=0; i<MODULE_INTERNAL_NUM; i++){
-        if (i != MODULE_USB && i != MODULE_POWER && i!=MODULE_CPU)
-          Main_Shutdown(i);
-      }
-      Main_Shutdown(MODULE_CPU);
-         
-     //Set wake-up interrupt
-      Power_SetState(POWER_STATE_OFF);
-      PushButton_SetInterrupt(&PowerButton, TRUE);
-      //PushButton_SetInterrupt(&ModeButton, FALSE);  // Disable mode button
-
-      // STOP
-      PowerButton.NbrOfPress = 0;
-
-       while (PowerButton.NbrOfPress <3 && Power_GetState() == POWER_STATE_OFF ){
-          PowerButton.LastActivationTimeStamp = timestamp;
-
-          #ifdef POWER_MANAGE
-            PWR_EnterSTOPMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
-          #else
-            i = PowerButton.NbrOfPress;
-            while (Power_GetState()==POWER_STATE_OFF && PowerButton.NbrOfPress==i);
-          #endif
-          
-          update_timestampRTC();
-          if (PowerButton.LastActivationTimeStamp + 2 < timestamp){ // 2 seconds delay expired, reset counter
-            PowerButton.NbrOfPress = 0;
-          }
-
-          //PushButton_SetPollingAndResetTicks(&PushButton1);
-          Power_StateDisplay();
-        
-          if (USB_IsConnected()){
-            // Set clock to correctly display blinking LEDs
-            RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
-            RCC_HSEConfig(RCC_HSE_ON);
-            RCC_PLLCmd(ENABLE);
-
-            // Disable push button interrupt
-            PushButton_SetInterrupt(&PowerButton, FALSE);
-
-            while (USB_GetState()==USB_STATE_CONNECTED){
-              PWR_EnterSleepMode(PWR_Regulator_LowPower, PWR_STOPEntry_WFI);
-            }
-            // Reenable push button interrupt
-            PushButton_SetInterrupt(&PowerButton, TRUE);
-          }
-        }*/
-
-        //PowerDown_NbrOfPress = 0;
-//        SysTick_DelayDownCounter=0;
-        
-
-        // This line is reached when the WIMU has been started again
-        //Power_SetState(POWER_STATE_ON);
-     
-        // Restart modules
-        /*Main_Init();
-        led(LED_GREEN,TRUE, MEDIUM_PRIORITY);
-        Main_Startup();
-  //      startup_ext();
-      
-        sprintf(buf, "WIMUGPS On\r\n");
-        if (isModuleOnline(MODULE_DATALOGGER))
-                datalog_save_data((unsigned char*)&buf[0],12, TRUE, MODULE_CPU,0);
-
-        led(LED_GREEN,FALSE, NO_PRIORITY);*/
 
         PushButton_ResetAll(&PowerButton);
         PowerButton.LastActivationTimeStamp = timestamp;
@@ -1432,6 +1368,7 @@ void Main_Shutdown(InternalModules_ID int_mod){
 	if (int_mod==MODULE_USB || int_mod==MODULE_ALL){
           if (getModuleState(MODULE_USB)!=STATE_DISABLED){
             USB_Stop();
+            msWait(200);
             setModuleState(MODULE_USB, STATE_OFFLINE);
           }	
 	}
@@ -1454,7 +1391,7 @@ void Main_Shutdown(InternalModules_ID int_mod){
 	
 	//*** GPS MODULE ***
 	if (int_mod==MODULE_GPS || int_mod==MODULE_ALL){
-          if (getModuleState(MODULE_GPS)!=STATE_DISABLED){
+          if (getModuleState(MODULE_GPS)!=STATE_DISABLED  && getModuleState(MODULE_GPS)!=STATE_OFFLINE){
             GPS_Stop();
             setModuleState(MODULE_GPS, STATE_OFFLINE);
           }
@@ -1462,7 +1399,7 @@ void Main_Shutdown(InternalModules_ID int_mod){
 	
 	//*** ACCELEROMETERS MODULE ***
 	if (int_mod==MODULE_ACC || int_mod==MODULE_ALL){
-          if (getModuleState(MODULE_ACC)!=STATE_DISABLED/*(enabled_i_devices & MODULE_ACC) && ((int_mask & MODULE_ACC))*/){
+          if (getModuleState(MODULE_ACC)!=STATE_DISABLED && getModuleState(MODULE_ACC)!=STATE_OFFLINE/*(enabled_i_devices & MODULE_ACC) && ((int_mask & MODULE_ACC))*/){
                   MPUCompass_MPUStop();
                   MPUCompass_DisablePower();
                   setModuleState(MODULE_ACC, STATE_OFFLINE);
@@ -1483,7 +1420,7 @@ void Main_Shutdown(InternalModules_ID int_mod){
 	
 	//*** MAGNETO MODULE ***
 	if (int_mod==MODULE_MAGNETO || int_mod==MODULE_ALL){
-          if (getModuleState(MODULE_MAGNETO)!=STATE_DISABLED){
+          if (getModuleState(MODULE_MAGNETO)!=STATE_DISABLED  && getModuleState(MODULE_MAGNETO)!=STATE_OFFLINE){
                   MPUCompass_CompassStop();
                   MPUCompass_DisablePower();
                   setModuleState(MODULE_MAGNETO, STATE_OFFLINE);
@@ -1492,14 +1429,14 @@ void Main_Shutdown(InternalModules_ID int_mod){
 	
 	//*** BLE MODULE ***
 	if (int_mod==MODULE_BLE || int_mod==MODULE_ALL){
-          if (getModuleState(MODULE_BLE)!=STATE_DISABLED){
+          if (getModuleState(MODULE_BLE)!=STATE_DISABLED  && getModuleState(MODULE_BLE)!=STATE_OFFLINE){
                   stop_ble();
                   setModuleState(MODULE_BLE, STATE_OFFLINE);
           }
 	}
 
         if (int_mod==MODULE_CPU || int_mod==MODULE_ALL){
-          __disable_irq();
+          //__disable_irq();
            BatteryMonitoring_Stop();
     
           GPIO_InitTypeDef GPIO_InitStructure;
@@ -1550,7 +1487,7 @@ void Main_Shutdown(InternalModules_ID int_mod){
           PushButton_SetInterrupt(&ModeButton, ENABLE);
           PushButton_SetInterrupt(&PowerButton, ENABLE);
           
-          __enable_irq();
+          //__enable_irq();
 
           // Keep USB interrupts alive
           //USBDetect_Config();
@@ -1575,6 +1512,7 @@ void Main_PowerdownAll(){
 void Main_ManageNewPowerState(){
   uint8_t status;
   PowerStates last_state = Power_GetLastState();
+  Power_ResetStateTime(); // Reset time that the system was in that mode
   
   /////////////////////////////
   // New state action

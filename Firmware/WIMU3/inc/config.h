@@ -29,13 +29,13 @@
 
 #define VERSION_MAJOR	3	
 #define VERSION_MINOR	3
-#define VERSION_REV	2
+#define VERSION_REV	4
 
 #define VERSION_MAJOR_CHAR  '3'
 #define VERSION_MINOR_CHAR  '3'
-#define VERSION_REV_CHAR    '2'
+#define VERSION_REV_CHAR    '4'
 
-#define VERSION_STRING  "** WIMuGPS - Version 3.3.2 **\n\r" //should always be 31 in length
+#define VERSION_STRING  "** WIMuGPS - Version 3.3.4 **\n\r" //should always be 31 in length
 #define	LEN_VERSION_STRING	31
 
 #define CONSOLE_USART USART1
@@ -68,13 +68,13 @@ typedef struct {
         int crc;
  } WIMU_SETTINGS;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   int8_t    time_offset;
   bool      enable_gps_time;
   bool      enable_auto_offset; // Unused... for now!
 } WIMUConfig_DateTimeOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   uint8_t   led_blink_time;
   bool      write_led;
   bool      enable_marking;
@@ -82,52 +82,52 @@ typedef struct {
   bool      ble_activity_led;
 } WIMUConfig_UIOptions;
 
-typedef struct {
-  uint8_t   sampling_rate;
+typedef struct __attribute__((__packed__)) {
+  uint16_t   sampling_rate;
   bool      enable_watchdog;
 } WIMUConfig_GlobalOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   uint8_t   max_files_in_folder;
   bool      split_by_day;
 } WIMUConfig_LoggerOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   uint8_t interval;
   bool    force_cold;
   bool    enable_scan_when_charged;
 } WIMUConfig_GPSOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   bool      power_manage;
   bool      enable_motion_detection;
   bool      adv_power_manage;
 } WIMUConfig_PowerOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   bool      enable_control;
 } WIMUConfig_BLEOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   uint8_t   range;
 } WIMUConfig_AccOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__))  {
   uint8_t   range;
 } WIMUConfig_GyroOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   uint8_t   range;
 } WIMUConfig_MagOptions;
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
   float     beta;
   bool      disable_magneto;
   bool      auto_calib_gyro;
 } WIMUConfig_IMUOptions;
 
 
-typedef struct {
+typedef struct __attribute__((__packed__)) {
 	uint16_t                    enabled_modules;   // Enabled modules
         WIMUConfig_DateTimeOptions  datetime;          // Date & Time options
         WIMUConfig_UIOptions        ui;                // User Interface options
@@ -143,7 +143,7 @@ typedef struct {
         int crc;
 } WIMU_CONFIG;
 
-#define MAX_FS  200
+#define MAX_FS  50
 
 ///////////
 // CLOCK //

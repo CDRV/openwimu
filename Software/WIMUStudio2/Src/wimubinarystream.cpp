@@ -115,7 +115,7 @@ WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(WIMUConfig *config
     ds >> status;
 
     // WIMU2
-    if (current_config->hwId==2){
+    if (current_config->getHwId()==2){
         power.status = WIMU::POWER_STATE_UNKNOWN; // No power state in this version
         power.charging = false;
 
@@ -130,7 +130,7 @@ WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(WIMUConfig *config
 
     }
     // WIMU3
-    if (current_config->hwId==3){
+    if (current_config->getHwId()==3){
         power.status = ((WIMU::PowerStates)(status & 0x7F));
         power.charging = (status & 0x80) > 0;
 

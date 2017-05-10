@@ -24,6 +24,16 @@
 
 #define GPS_MODE  GPS_SIRF
 
+// Trickle Power
+// Recommended SIRF values for low power: 30% at 300ms on-time
+#define GPS_DUTY_CYCLE    30
+#define GPS_ON_TIME       300
+
+// Advanced Low Powers parameters
+#define GPS_MAX_OFF_TIME      120000   // msec
+#define GPS_MAX_SEARCH_TIME   120000  // msec
+#define GPS_ADAPTIVE          false
+
 //#define GPS_MODE_1			// Define to use 57600 bps and SM
 //#ifdef WHEELCHAIR
 	//#define GPS_MODE_1
@@ -138,6 +148,8 @@ Error_TypeDef GPS_SendString(char* msg, unsigned short len);
 	unsigned short GPS_Checksum(unsigned char* msg, unsigned short len);
         unsigned char GPS_SetMsgInterval(unsigned char msg_id, unsigned char interval);
 	unsigned char GPS_SetMsgFrequency();
+        Error_TypeDef GPS_SetTricklePower(bool pushToFix, short dutyCycle, int onTime);
+        Error_TypeDef GPS_SetAcquisitionParams(unsigned int maxOffTime, unsigned int maxSearchTime, unsigned int pushToFixPeriod, bool adaptiveTrickle);
 	void GPS_Sleep(BOOL sleep);
 #endif
 Error_TypeDef GPS_ProcessRX(void);

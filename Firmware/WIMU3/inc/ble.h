@@ -115,7 +115,7 @@ typedef struct
 
 typedef struct {
   uint16_t  enabled_modules;
-  uint8_t   sampling_rate;
+  uint16_t  sampling_rate;
   uint8_t   acc_range;
   uint8_t   gyro_range;
   uint8_t   mag_range;

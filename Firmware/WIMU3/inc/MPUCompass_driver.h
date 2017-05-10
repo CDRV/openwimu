@@ -24,14 +24,18 @@
   {
     MPUCOMPASS_50Hz = 159,//655,//1312,
     MPUCOMPASS_100Hz = 79,//328,
-    MPUCOMPASS_200Hz = 39//164
+    MPUCOMPASS_200Hz = 39,//164
+    MPUCOMPASS_500Hz = 15,
+    MPUCOMPASS_1000Hz = 7
   } MPUCompassSamplingFreq_TypeDef;
 #else
   typedef enum
   {
     MPUCOMPASS_50Hz = 19,
     MPUCOMPASS_100Hz = 9,
-    MPUCOMPASS_200Hz = 4
+    MPUCOMPASS_200Hz = 4,
+    MPUCOMPASS_500Hz = 1,
+    MPUCOMPASS_1000Hz = 0
   } MPUCompassSamplingFreq_TypeDef;
 #endif
 

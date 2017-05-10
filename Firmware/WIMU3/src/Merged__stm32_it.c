@@ -211,6 +211,8 @@ void SysTick_Handler(void)
     SysTick_Counter=0;
     Alive_Counter++;
 
+    Power_UpdateStateTime();
+
     // Check battery power
     if (isModuleOnline(MODULE_POWER)){
       power_ready = TRUE;
@@ -220,21 +222,8 @@ void SysTick_Handler(void)
       ble_update_time = true;
     }
 
-    // Update calibration counter if needed
-/*    if (Calib_Counter>0){
-      Calib_Counter--;
-      Buzzer_Start(10);
+    
 
-      if (isModuleOnline(MODULE_USB)){
-        if (Calib_Counter>0)
-          usb_send_char('.');
-        else
-          usb_send_string("OK\n\r",4);
-      }
-      //Buzzer_Stop();
-    }*/
-    // Update battery level
-//   BatteryMonitoring_RdADC(&Battery_ADCValue);
   }
 
   // Push buttons management

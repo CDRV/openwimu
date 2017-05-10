@@ -30,6 +30,8 @@ private:
     //USBReader*              m_serialPort;
     WIMUUSBDriver            m_wimuDriver;
 
+    WIMUSettings            m_currentSettings;
+
     QIcon       getIconForComponent(int index, bool enabled);
     QCheckBox*  getActiveChkBox(int index);
 

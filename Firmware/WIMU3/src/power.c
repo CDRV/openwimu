@@ -57,6 +57,8 @@ bool power_is_charging;
 bool power_is_stopped;
 bool power_charge_completed;
 
+uint32_t power_state_time; // Time that the module is in that power state
+
 // Power Management
 //uint16_t Battery_ADCValue;
 //uint16_t Temp_ADCValue;
@@ -90,6 +92,7 @@ Error_TypeDef Power_Init(void){
   last_power_state = POWER_STATE_OFF;
   power_state = POWER_STATE_ON;
   power_is_stopped=false;
+  power_state_time = 0;
 
   // Get VrefIntCal value
   uint16_t* val = (uint16_t *) 0x1FF800F8;
@@ -243,6 +246,7 @@ void Power_StateDisplay(){
       led(LED_GREEN,FALSE, NO_PRIORITY);
       if (Power_IsCharging()){
         //led(LED_RED,TRUE);
+        led_stop_blink(LED_BLUE);
         led_start_blink(LED_BLUE,100,2900, HIGH_PRIORITY);
       }else{
         //led(LED_RED,FALSE);
@@ -254,10 +258,11 @@ void Power_StateDisplay(){
         led(LED_BLUE, TRUE);
       else*/
       led(LED_BLUE, FALSE, NO_PRIORITY);
-      if (Power_IsCharging())
+      if (Power_IsCharging()){
         //led(LED_RED, TRUE);
+        led_stop_blink(LED_BLUE);
         led_start_blink(LED_BLUE,100,2900, HIGH_PRIORITY);
-      else{
+      }else{
         led_stop_blink(LED_BLUE);
       }
       led(LED_RED,FALSE, NO_PRIORITY);
@@ -311,16 +316,30 @@ bool Power_StateUpdate(){
   // 2. Check if USB is connected
   if (USB_IsConnected()/* && !Power_IsStopRequired(last_state)*/){
     // Check if we are connected to a computer or not
-     if ((bDeviceState==UNCONNECTED || bDeviceState==ATTACHED) && Power_GetState()!=POWER_STATE_USB_MASS && Power_GetState()!=POWER_STATE_USB_COM){
+     /*if ((bDeviceState==UNCONNECTED || bDeviceState==ATTACHED) && (Power_GetState()==POWER_STATE_USB_MASS || Power_GetState()==POWER_STATE_USB_COM)){
        // Wait a little more, just in case...
         //msWait(700);
-        msWait(400);
-        if (bDeviceState==UNCONNECTED || bDeviceState==ATTACHED){
+        msWait(500);
+        //if (bDeviceState==UNCONNECTED || bDeviceState==ATTACHED){
+        if (bDeviceState==UNCONNECTED){
           Power_SetState(POWER_STATE_USB); // Plugged in with a wall charger
           return power_state != last_state;
         }
-      }
+      }*/
      //} else{
+
+     // Check if we need to stop the module - plugged in USB
+    if (power_state==POWER_STATE_USB_MASS || power_state==POWER_STATE_USB_COM){
+      if (power_state_time >= 5){ // Wait 5 seconds for USB state to change
+        // Check if stay in that mode or not...
+        if (bDeviceState==UNCONNECTED){
+          // Switch to USB mode
+          Power_SetState(POWER_STATE_USB);
+          return power_state != last_state;
+        }
+      }
+    }
+     
       // Depending on usb mode, set correct state
       if (usb_mode==VIRTUAL_COM)
         Power_SetState(POWER_STATE_USB_COM);
@@ -424,6 +443,21 @@ float Temp_FromADC(uint16_t temp){
   return temperature;
 }
 
+uint8_t Power_GetStateTime(){
+  return power_state_time;
+}
+
+void Power_ResetStateTime(){
+  power_state_time = 0;
+}
+
+void Power_SetStateTime(uint8_t new_time){
+  power_state_time = new_time;
+}
+
+void Power_UpdateStateTime(){
+  power_state_time++;
+}
 
 // Charging state changed
 void EXTI1_IRQHandler(void)

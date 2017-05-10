@@ -52,10 +52,6 @@
       </file>
     </folder>
     <folder Name="LIB_USB">
-      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_cal.c"/>
-      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_dev.c"/>
-      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_int.c"/>
-      <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/otgd_fs_pcd.c"/>
       <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_core.c"/>
       <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_init.c"/>
       <file file_name="Libraries/STM32_USB-FS-Device_Driver/src/usb_int.c"/>

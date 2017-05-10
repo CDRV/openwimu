@@ -578,7 +578,7 @@ QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rg
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>14</number>
+         <number>4</number>
         </property>
         <widget class="QWidget" name="pgEmpty"/>
         <widget class="QWidget" name="pgDateTime">
@@ -1136,6 +1136,16 @@ de la position GPS</string>
                  <item>
                   <property name="text">
                    <string>200</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>500</string>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string>1000</string>
                   </property>
                  </item>
                 </widget>

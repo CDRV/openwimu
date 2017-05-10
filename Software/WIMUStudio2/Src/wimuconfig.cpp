@@ -2,18 +2,16 @@
 
 #include <QFile>
 
-WIMUConfig::WIMUConfig(quint8 hw_id, QObject *parent) :
-    QObject(parent),
-    hwId(hw_id)
+WIMUConfig::WIMUConfig(WIMUSettings &settings, QObject *parent) :
+    QObject(parent)
 {
     qRegisterMetaType<WIMUConfig>("WIMUConfig");
-
     setDefaults();
+    m_settings = settings;
 }
 
 WIMUConfig::WIMUConfig(QObject *parent) :
-    QObject(parent),
-    hwId(3)
+    QObject(parent)
 {
     qRegisterMetaType<WIMUConfig>("WIMUConfig");
 
@@ -86,18 +84,21 @@ void WIMUConfig::setDefaults(){
     imu.auto_calib_gyro = true;
     imu.beta = 0.5;
     imu.disable_magneto = false;
+
+    // Settings
+    m_settings.setDefaults();
 }
 
 void WIMUConfig::enableModule(WIMU::Modules_ID module, bool enable){
     if (enable){
-        enabled_modules |= (1 << module);
+        enabled_modules |= (1 << (module));
     }else{
         enabled_modules &= ~(1 << module);
     }
 }
 
 bool WIMUConfig::isModuleEnabled(WIMU::Modules_ID module){
-    return (enabled_modules & (1 << (module-1)))>0;
+    return (enabled_modules & (1 << (module)))>0;
 }
 
 bool WIMUConfig::saveToFile(QString filename){
@@ -144,7 +145,7 @@ void WIMUConfig::loadFromIMUConfig(WIMU::IMUConfig_Struct &config){
 }
 
 quint16 WIMUConfig::size(){
-    quint16 size=2;
+    quint16 size=0;
 
     // sizeof doesn't seem to work with VC compiler... so ugly stuff here!
 
@@ -155,7 +156,14 @@ quint16 WIMUConfig::size(){
     //size += sizeof(ui);
     size += sizeof(quint8) + sizeof(bool)*4;
     //size += sizeof(general);
-    size += sizeof(quint8) + sizeof(bool);
+    if (m_settings.version_major==3 && m_settings.version_minor<=3 && m_settings.version_rev<=3){
+        // Sampling rate on those versions was on 8 bits
+        size += sizeof(quint8) + sizeof(bool);
+        size += 2; // Align data
+    }else{
+        size += sizeof(quint16) + sizeof(bool);//+3;
+    }
+
     //size += sizeof(logger);
     size += sizeof(quint8) + sizeof(bool);
     //size += sizeof(gps);
@@ -182,10 +190,10 @@ float WIMUConfig::convertAcc2g(qint16 &value){
     float rval;
     quint8 range_val = getAccRangeValue();
 
-    if (hwId==2)
+    if (m_settings.hw_id==2)
         rval = (((float)value / 4095.f) *2 * range_val) - range_val;
 
-    if (hwId==3)
+    if (m_settings.hw_id==3)
         rval = ((float)value / 32767.f) * range_val;
 
 
@@ -198,10 +206,10 @@ float WIMUConfig::convertGyro2degs(qint16 &value){
 
     quint16 range_val = getGyroRangeValue();
 
-    if (hwId==2)
+    if (m_settings.hw_id==2)
         rval = (((float)value / 4095.f) *2 * range_val) - range_val;
 
-    if (hwId==3)
+    if (m_settings.hw_id==3)
         rval = ((float)value / 32767.f) * range_val;
 
     return rval;
@@ -212,10 +220,10 @@ float WIMUConfig::convertMag2gauss(qint16 &value){
 
     float range_val = getMagRangeValue();
 
-    if (hwId==2)
+    if (m_settings.hw_id==2)
         rval = (((float)value / 4095.f) *2 * range_val) - range_val;
 
-    if (hwId==3)
+    if (m_settings.hw_id==3)
         rval = ((float)value / 2048.f) * range_val;
 
     return rval;
@@ -224,7 +232,7 @@ float WIMUConfig::convertMag2gauss(qint16 &value){
 float WIMUConfig::convertBatt2volt(quint16 &value){
     float rval=0.f;
 
-    if (hwId==2)
+    if (m_settings.hw_id==2)
         rval = ((float)value / 4095.f) * 2 * 2.5;
 
     // On hwId=3, conversion is done on board.
@@ -233,9 +241,10 @@ float WIMUConfig::convertBatt2volt(quint16 &value){
 }
 
 float WIMUConfig::convertTemp2deg(qint16 &value){
+    Q_UNUSED(value)
     float rval=0.f;
 
-    if (hwId==2){
+    if (m_settings.hw_id==2){
        // TODO, if useful...
     }
 
@@ -248,10 +257,10 @@ float WIMUConfig::convertTemp2deg(qint16 &value){
 quint8 WIMUConfig::getAccRangeValue(){
     quint8 rval=0;
 
-    if (hwId==3)
+    if (m_settings.hw_id==3)
         rval = (quint8)1 << (acc.range+1);
 
-    if (hwId==2){
+    if (m_settings.hw_id==2){
         if (acc.range==0)
             rval = 1; // Real value should be 1.5
         else{
@@ -265,10 +274,10 @@ quint8 WIMUConfig::getAccRangeValue(){
 quint16 WIMUConfig::getGyroRangeValue(){
     quint16 rval;
 
-    if (hwId==3)
+    if (m_settings.hw_id==3)
         rval = (((quint8)1 << (gyro.range))) * 250;
 
-    if (hwId==2)
+    if (m_settings.hw_id==2)
         rval = 500;
     return rval;
 }
@@ -276,7 +285,7 @@ quint16 WIMUConfig::getGyroRangeValue(){
 float WIMUConfig::getMagRangeValue(){
     float rval = 0.f;
 
-    if (hwId==3){
+    if (m_settings.hw_id==3){
         switch (magneto.range){
         case 0:
             rval = 0.88f;
@@ -307,7 +316,7 @@ float WIMUConfig::getMagRangeValue(){
         }
     }
 
-    if (hwId==2){
+    if (m_settings.hw_id==2){
         switch (magneto.range){
         case 0:
             rval = 0.7f;
@@ -341,6 +350,10 @@ float WIMUConfig::getMagRangeValue(){
     return rval;
 }
 
+quint8 WIMUConfig::getHwId(){
+    return m_settings.hw_id;
+}
+
 QByteArray WIMUConfig::serialize(){
     QByteArray bytes;
     QDataStream ds(&bytes, QIODevice::WriteOnly);
@@ -356,7 +369,14 @@ QByteArray WIMUConfig::serialize(){
     ds << ui.enable_marking;
     ds << ui.gps_fix_led;
     ds << ui.ble_activity_led;
-    ds << general.sampling_rate;
+    if (m_settings.version_major==3 && m_settings.version_minor<=3 && m_settings.version_rev<=3){
+        // Sampling rate was on 8 bits...
+        quint8 buf8 = general.sampling_rate;
+        ds << buf8;
+    }else{
+        ds << general.sampling_rate;
+    }
+
     ds << general.enable_watchdog;
     ds << logger.max_files_in_folder;
     ds << logger.split_by_day;
@@ -385,7 +405,7 @@ void WIMUConfig::unserialize(QByteArray* data){
     ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
     quint8 buf8;
 
-    if (hwId==2){
+    if (m_settings.hw_id==2){
         quint16 buf16;
         ds >> enabled_modules;
         ds >> buf16;
@@ -450,7 +470,7 @@ void WIMUConfig::unserialize(QByteArray* data){
         // Ignore the rest for now...!
     }
 
-    if (hwId==3){
+    if (m_settings.hw_id==3){
         ds >> enabled_modules;
         //ds >> datetime.time_offset;
         ds >> buf8;
@@ -462,7 +482,13 @@ void WIMUConfig::unserialize(QByteArray* data){
         ds >> ui.enable_marking;
         ds >> ui.gps_fix_led;
         ds >> ui.ble_activity_led;
-        ds >> general.sampling_rate;
+        if (m_settings.version_major==3 && m_settings.version_minor<=3 && m_settings.version_rev<=3){
+            // Sampling rate was on 8 bits...
+            ds >> buf8;
+            general.sampling_rate = buf8;
+        }else{
+            ds >> general.sampling_rate;
+        }
         ds >> general.enable_watchdog;
         ds >> logger.max_files_in_folder;
         ds >> logger.split_by_day;
@@ -470,19 +496,12 @@ void WIMUConfig::unserialize(QByteArray* data){
         ds >> gps.force_cold;
         ds >> gps.enable_scan_when_charged;
         ds >> power.power_manage;
-        ds >> power.adv_power_manage;
         ds >> power.enable_motion_detection;
+        ds >> power.adv_power_manage;
         ds >> ble.enable_control;
         ds >> acc.range;
         ds >> gyro.range;
         ds >> magneto.range;
-        /*quint8 beta[4];
-        //ds >> imu.beta;
-        ds >> beta[0];
-        ds >> beta[1];
-        ds >> beta[2];
-        ds >> beta[3];
-        imu.beta = *((float*)&beta[0]);*/
         ds >> imu.beta;
 
         ds >> imu.disable_magneto;
@@ -505,6 +524,8 @@ WIMUConfig& WIMUConfig::operator = (const WIMUConfig& original){
     this->ui = original.ui;
     this->crc = original.crc;
     this->enabled_modules = original.enabled_modules;
+
+    this->m_settings = original.m_settings;
 
     return *this;
 }

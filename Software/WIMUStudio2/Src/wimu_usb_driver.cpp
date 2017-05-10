@@ -48,6 +48,7 @@ bool WIMUUSBDriver::wimuConnect(){
     if (rval){
         connect(m_serialPort,SIGNAL(aboutToClose()),this,SIGNAL(comAboutToClose()));
         connect(m_serialPort,SIGNAL(readyRead()),this,SLOT(serialPortDataReady()));
+        connect(m_serialPort,SIGNAL(bytesWritten(qint64)),this,SLOT(serialPortBytesWritten(qint64)));
         connect(m_serialPort,SIGNAL(error(QSerialPort::SerialPortError)),this,SIGNAL(comError(QSerialPort::SerialPortError)));
     }
 
@@ -166,10 +167,12 @@ void WIMUUSBDriver::serialPortDataReady(){
     switch (m_commands_ids.head()){
     case WimuCmdGetConf:{
         // Check if we have received everything yet
-        if (m_serialBuffer.count()<WIMUConfig::size())
+         WIMUConfig config(m_currentSettings); // TODO: detect and use correct hardware version...
+
+        if (m_serialBuffer.count()<config.size())
             return;
         // Load data
-        WIMUConfig config(3); // TODO: detect and use correct hardware version...
+
 
         while( !(m_serialBuffer.at(0) == char(0xEA) && m_serialBuffer.at(1) == char(0xEA)) &&
               m_serialBuffer.count()>=2){ // Sync on sync byte
@@ -182,7 +185,7 @@ void WIMUUSBDriver::serialPortDataReady(){
         m_serialBuffer.remove(0,1); // remove module ID
 
         // Check length
-        if (m_serialBuffer.at(0) != WIMUConfig::size()){
+        if (m_serialBuffer.at(0) != config.size()){
             emit cmdError(m_commands_ids.head());
         }else{
             m_serialBuffer.remove(0,1); // remove length
@@ -257,7 +260,7 @@ void WIMUUSBDriver::serialPortDataReady(){
             return;
 
         // Load data
-        WIMUSettings settings;
+
 
         while( !(m_serialBuffer.at(0) == char(0xEA) && m_serialBuffer.at(1) == char(0xEA)) &&
               m_serialBuffer.count()>=2){ // Sync on sync byte
@@ -278,9 +281,9 @@ void WIMUUSBDriver::serialPortDataReady(){
                 emit cmdError(m_commands_ids.head());
             }else{
                 m_serialBuffer.remove(0,1); // remove length
-                settings.unserialize(&m_serialBuffer);
+                m_currentSettings.unserialize(&m_serialBuffer);
 
-                emit settingsReceived(settings);
+                emit settingsReceived(m_currentSettings);
 
             }
         }
@@ -312,6 +315,11 @@ void WIMUUSBDriver::serialPortDataReady(){
     }
 
 
+}
+
+
+void WIMUUSBDriver::serialPortBytesWritten(qint64 bytes){
+    Q_UNUSED(bytes)
 }
 
 void WIMUUSBDriver::wimuReboot(){

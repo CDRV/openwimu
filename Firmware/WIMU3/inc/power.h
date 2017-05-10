@@ -91,6 +91,11 @@ bool          Power_IsCharging();
 PowerStates   Power_GetState();
 PowerStates   Power_GetLastState();
 
+uint8_t       Power_GetStateTime();
+void          Power_ResetStateTime();
+void          Power_SetStateTime(uint8_t new_time);
+void          Power_UpdateStateTime();
+
 void          ChargeStat_Config(void);
 //uint8_t ChargeStat_StateChanged(uint8_t * NewState);
 uint8_t       ChargeStat_GetState();

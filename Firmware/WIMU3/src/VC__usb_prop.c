@@ -34,6 +34,8 @@
 #include "usb_pwr.h"
 #include "Merged__hw_config.h"
 
+#include "power.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -218,6 +220,7 @@ void Virtual_Com_Port_SetConfiguration(void)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
+   // Power_StateUpdate();
   }
 }
 

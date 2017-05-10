@@ -219,17 +219,7 @@ Error_TypeDef GPS_Start(void){
 		GPS_ProcessRX();
 		gps_rx_ready=FALSE;
 
-                //GPS_SetBaudrate(57600);
-                //GPS_SetBaudrate(9600);
-		
-		//if (initialized==FALSE){
-		//	while (gps_rx_ready==FALSE); //Wait for initial message
-		//	process_gps_rx();
-		//	gps_rx_ready=FALSE;
-		/*}else{
-			sleep_gps(FALSE);
-		}*/
-		
+             		
 		// Test communication: Get SIRF chip version
 		/*bin[0]=SIRF_POLL_VERSION;
 		bin[1]=0x00;
@@ -279,7 +269,10 @@ Error_TypeDef GPS_Start(void){
 		
 		
 		// GPS Adaptative Trickle Power Mode
-		// MOVED TO GOT FIRST FIX SECTION
+		if (wimu_config.power.adv_power_manage == true){
+                    GPS_SetTricklePower(false, GPS_DUTY_CYCLE*10, GPS_ON_TIME);
+                    //GPS_SetAcquisitionParams(GPS_MAX_OFF_TIME, GPS_MAX_SEARCH_TIME, 0, GPS_ADAPTIVE); // MOVED INTO GOT TIME SECTION
+                }
 				
 		//GPS FORCE COLD START MODE
 		/*if ((wimu_config.gps_opt & CONFIG_GPS_COLD)>0){
@@ -320,17 +313,7 @@ Error_TypeDef GPS_Start(void){
 		gps_rx_ready=FALSE;*/
 		
 	#endif
-	// 
 	
-	//Set request to get all NMEA messages
-	//gps_send_string("$PUNV,CONFIG,00,00,0,1000,57600,FF*cc\r\n",39);
-	
-	//sleep(200);
-	//gps_send_string("$PSRF103,00,00,00,01*24\r\n",25);	// Disable GGA
-	//sleep(200);
-	//gps_send_string("$PSRF103,00,00,00,01*24\r\n",25);	// Disable GGA
-	//gps_send_string("$PSRF103,08,00,01,01*2D\r\n",25); //Enable ZDA
-	//gps_send_string("$PSRF103,01,00,01,01*24\r\n",25); //Enable GLL
 	
 
 	
@@ -365,67 +348,21 @@ void GPS_Stop(void){
 
 void GPS_Sleep(BOOL sleep){
 	//Puts the GPS in a pseudo-sleep mode using SIRF commands
-	unsigned char bin[16];
+	//unsigned char bin[16];
 	if (sleep==TRUE){
 		//Set trickle power
-		bin[0]=SIRF_SET_TRICKLE_POWER;
-		bin[1]=0x00; 	//Using push-to-fix mode
-		bin[2]=0x01;
-		bin[3]=0x03;	//Duty Cycle set to 100%
-		bin[4]=0xE8;
-		bin[5]=0x00;	//On-Time set to 200 ms
-		bin[6]=0x00;
-		bin[7]=0x00;
-		bin[8]=0xC8;
-	
-		GPS_SendSirf(&bin[0],9);
-		while (gps_tx_queue>0);
-		//Wait for acknowledgement message
-		while (gps_rx_ready==FALSE);
-		GPS_ProcessRX();
-		gps_rx_ready=FALSE;
-		
-		bin[0]=SIRF_SET_LOWPOW_PARAMS;
-		bin[1] = 0x01; 	// Set max offtime as maximum value possible
-		bin[2] = 0xFF;	
-		bin[3] = 0xFF;	
-		bin[4] = 0xFF;
-		bin[5] = 0x00;	// Set min search time as minimum value possible
-		bin[6] = 0x00;	
-		bin[7] = 0x00;
-		bin[8] = 0x01;
-		bin[9] = 0x00;	// Set push-to-fix period
-		bin[10]= 0x00;
-		bin[11]= 0x00;
-		bin[12]= 0x00;
-		bin[13]= 0x00;	// Disable Adaptative Trickle Power
-		bin[14]= 0x00;
-		
-		GPS_SendSirf(&bin[0],15);
-		while (gps_tx_queue>0);
-		//Wait for acknowledgement message
-		while (gps_rx_ready==FALSE);
-		GPS_ProcessRX();
-
+                GPS_SetTricklePower(true, 1000, 200);
+                GPS_SetAcquisitionParams(0xFFFF, 0, 0, false); //Set max offtime as maximum value possible, Set min search time as minimum value possible, Disable Adaptative Trickle Power
 		gps_sleep=TRUE;
 		
 	}else{
 		//Revert to default settings
-		bin[0]=SIRF_SET_TRICKLE_POWER;
-		bin[1]=0x00; 	//No push-to-fix mode
-		bin[2]=0x00;
-		bin[3]=0x03;	//Duty Cycle set to 100%
-		bin[4]=0xE8;
-		bin[5]=0x00;	//On-Time set to 200 ms
-		bin[6]=0x00;
-		bin[7]=0x00;
-		bin[8]=0xC8;
-	
-		GPS_SendSirf(&bin[0],9);
-		while (gps_tx_queue>0);
-		//Wait for acknowledgement message
-		while (gps_rx_ready==FALSE);
-		GPS_ProcessRX();
+                if (wimu_config.power.adv_power_manage == true){
+                    GPS_SetTricklePower(false, GPS_DUTY_CYCLE*10, GPS_ON_TIME);
+                    GPS_SetAcquisitionParams(GPS_MAX_OFF_TIME, GPS_MAX_SEARCH_TIME, 0, GPS_ADAPTIVE);
+                }else{
+                    GPS_SetTricklePower(false, 1000, 200);
+                }
 
 		gps_got_ffix = FALSE;
 		gps_sleep=FALSE;
@@ -645,6 +582,7 @@ Error_TypeDef GPS_ProcessRX(void){
 			time_sync++;
 			//TODO: resync at regular intervals???
 			//time_sync=TRUE;
+                       
 		}else{
                   if (time_sync!=TIME_SYNC_COUNT+1)
 			time_sync++;
@@ -691,6 +629,10 @@ Error_TypeDef GPS_ProcessRX(void){
                                                 if (wimu_config.datetime.enable_gps_time > 0 && getModuleState(MODULE_GPS)==STATE_SPECIAL){
                                                     // GOTO hibernation mode
                                                     GPS_Hibernate();
+                                                }else{
+                                                   if (wimu_config.power.adv_power_manage == true){
+                                                        GPS_SetAcquisitionParams(GPS_MAX_OFF_TIME, GPS_MAX_SEARCH_TIME, 0, GPS_ADAPTIVE);
+                                                   }
                                                 }
                                                 // Log time sync in log.dat
 						if (isModuleOnline(MODULE_DATALOGGER)){
@@ -716,6 +658,8 @@ Error_TypeDef GPS_ProcessRX(void){
 							datalog_save_data((unsigned char*)&buf[0],strlen(buf), TRUE, MODULE_CPU,0);
 						}*/
 						gps_time_drift=0;
+
+                                                
 					}
 				}
 			}
@@ -728,7 +672,11 @@ Error_TypeDef GPS_ProcessRX(void){
 					//Check if we got a first fix since last restart or not
 					gps_got_ffix = TRUE;
 
-                                        //TODO: Set duty cycle and adaptative trickle power
+                                        //Set duty cycle and adaptative trickle power
+                                        // MOVED INTO INIT SECTION
+                                        /*if (wimu_config.power.power_manage == true){
+                                            GPS_SetTricklePower(false, GPS_DUTY_CYCLE*10, GPS_ON_TIME);
+                                        }*/
 					
 					//Enable adaptative trickle power, if selected
 					/*if ((wimu_config.gps_opt & CONFIG_GPS_TRICKLE)>0){
@@ -832,6 +780,81 @@ Error_TypeDef GPS_SetMsgInterval(unsigned char msg_id, unsigned char interval){
 
 }
 
+Error_TypeDef GPS_SetTricklePower(bool pushToFix, short dutyCycle, int onTime){
+  uint32_t timeout = 0x0fFFFF;
+  unsigned char bin[9];
+  bin[0]=SIRF_SET_TRICKLE_POWER;
+  bin[1]=0;			
+  if (pushToFix)                // Using Push-To-Fix mode
+    bin[2]=1;		
+  else
+    bin[2]=0;
+  
+  bin[3] = (unsigned char)((dutyCycle & 0xFF00) >> 8);
+  bin[4] = (unsigned char)(dutyCycle & 0x00FF);
+  bin[5] = (unsigned char)((onTime & 0xFF000000) >> 24);
+  bin[6] = (unsigned char)((onTime & 0x00FF0000) >> 16);
+  bin[7] = (unsigned char)((onTime & 0x0000FF00) >> 8);
+  bin[8] = (unsigned char)(onTime & 0x000000FF);
+  
+                  
+  GPS_SendSirf(&bin[0], 9);
+  while (gps_tx_queue>0);
+  //Wait for acknowledgement message
+  last_gps_cmd = SIRF_CMD_NONE;
+  while (last_gps_cmd != SIRF_CMD_ACK){
+    while (gps_rx_ready==FALSE && (--timeout)>0);
+    if (timeout==0)
+      return ERROR_COM;
+    GPS_ProcessRX();
+    gps_rx_ready=FALSE;
+  }
+  return ERROR_NONE;
+}
+
+
+Error_TypeDef GPS_SetAcquisitionParams(unsigned int maxOffTime, unsigned int maxSearchTime, unsigned int pushToFixPeriod, bool adaptiveTrickle){
+  uint32_t timeout = 0x0fFFFF;
+  unsigned char bin[15];
+  bin[0]=SIRF_SET_LOWPOW_PARAMS;
+ // Maximum time for sleep mode (msec)
+  bin[1] = (unsigned char)((maxOffTime & 0xFF000000) >> 24);
+  bin[2] = (unsigned char)((maxOffTime & 0x00FF0000) >> 16);
+  bin[3] = (unsigned char)((maxOffTime & 0x0000FF00) >> 8);
+  bin[4] = (unsigned char)(maxOffTime & 0x000000FF);  
+  
+  // Max. satellite search time (msec)
+  bin[5] = (unsigned char)((maxSearchTime & 0xFF000000) >> 24);
+  bin[6] = (unsigned char)((maxSearchTime & 0x00FF0000) >> 16);
+  bin[7] = (unsigned char)((maxSearchTime & 0x0000FF00) >> 8);
+  bin[8] = (unsigned char)(maxSearchTime & 0x000000FF);  
+
+  // Push-to-Fix cycle period (sec)
+  bin[9] = (unsigned char)((pushToFixPeriod & 0xFF000000) >> 24);
+  bin[10] = (unsigned char)((pushToFixPeriod & 0x00FF0000) >> 16);
+  bin[11] = (unsigned char)((pushToFixPeriod & 0x0000FF00) >> 8);
+  bin[12] = (unsigned char)(pushToFixPeriod & 0x000000FF);  
+
+  bin[13] = 0;
+  if (adaptiveTrickle){
+      bin[14] = 1;
+  }else{
+      bin[14] = 0;
+  }
+                  
+  GPS_SendSirf(&bin[0], 15);
+  while (gps_tx_queue>0);
+  //Wait for acknowledgement message
+  last_gps_cmd = SIRF_CMD_NONE;
+  while (last_gps_cmd != SIRF_CMD_ACK){
+    while (gps_rx_ready==FALSE && (--timeout)>0);
+    if (timeout==0)
+      return ERROR_COM;
+    GPS_ProcessRX();
+    gps_rx_ready=FALSE;
+  }
+  return ERROR_NONE;
+}
 //------------------------------------------------------------------------------
 // GPS_SET_FILTERS
 //------------------------------------------------------------------------------

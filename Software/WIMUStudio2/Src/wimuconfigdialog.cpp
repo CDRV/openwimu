@@ -31,7 +31,7 @@ WIMUConfigDialog::WIMUConfigDialog(QWidget *parent) :
 
     // Set default states
     initUIState();
-    WIMUConfig default_config(3);
+    WIMUConfig default_config;
     loadFromConfig(&default_config);
 
     ui->chkDateTimeAutoOffset->setVisible(false); // Always hide that option for now..
@@ -281,7 +281,7 @@ void WIMUConfigDialog::connectGeneralUISignals(){
 void WIMUConfigDialog::buttonDefaultClicked(){
     //TODO: Message box to confirm
 
-    WIMUConfig default_config(3);
+    WIMUConfig default_config;
     loadFromConfig(&default_config);
 }
 
@@ -295,7 +295,7 @@ void WIMUConfigDialog::buttonSaveConfigClicked(){
     if (filename.isEmpty())
         return;
 
-    WIMUConfig config(3);
+    WIMUConfig config;
     saveToConfig(&config);
 
     if (config.saveToFile(filename)){
@@ -316,7 +316,7 @@ void WIMUConfigDialog::buttonLoadConfigClicked(){
     if (filename.isEmpty())
         return;
 
-    WIMUConfig config(3);
+    WIMUConfig config;
 
     if (config.loadFromFile(filename)){
         loadFromConfig(&config);
@@ -363,7 +363,7 @@ void WIMUConfigDialog::buttonWriteSettingsClicked(){
 
 void WIMUConfigDialog::buttonWriteConfigClicked(){
     // Pack data
-    WIMUConfig config(3);
+    WIMUConfig config(m_currentSettings);
     saveToConfig(&config);
 
     QByteArray data = config.serialize();
@@ -453,6 +453,15 @@ void WIMUConfigDialog::loadFromConfig(WIMUConfig* config){
     // Options
     ui->chkOptionsWatchdog->setChecked(config->general.enable_watchdog);
     ui->cmbOptionsSampling->setCurrentIndex(-1);
+    // Load sampling rates available depending on version
+    ui->cmbOptionsSampling->clear();
+    ui->cmbOptionsSampling->addItem("50");
+    ui->cmbOptionsSampling->addItem("100");
+    if (config->getHwId()==3){
+       ui->cmbOptionsSampling->addItem("200");
+       ui->cmbOptionsSampling->addItem("500");
+    }
+
     for (int i=0; i<ui->cmbOptionsSampling->count(); i++){
         if (ui->cmbOptionsSampling->itemText(i).toInt() == config->general.sampling_rate){
             ui->cmbOptionsSampling->setCurrentIndex(i);
@@ -521,6 +530,8 @@ void WIMUConfigDialog::loadFromConfig(WIMUConfig* config){
     ui->chkIMUNoMag->setChecked(config->imu.disable_magneto);
     ui->txtIMUBeta->setText(QString::number(config->imu.beta));
 
+
+
 }
 
 void WIMUConfigDialog::loadFromSettings(WIMUSettings* settings){
@@ -542,6 +553,7 @@ void WIMUConfigDialog::loadFromSettings(WIMUSettings* settings){
         ui->tblOffsets->item(2,i)->setText(QString::number(settings->mag_offset[i]));
     }
 
+    m_currentSettings = *settings;
 }
 
 void WIMUConfigDialog::saveToSettings(WIMUSettings* settings){
@@ -587,7 +599,7 @@ void WIMUConfigDialog::saveToConfig(WIMUConfig* config){
 
     // Power Saving
     config->power.power_manage = ui->chkPowerPowerSaving->isChecked();
-    config->power.adv_power_manage = config->power.adv_power_manage;
+    config->power.adv_power_manage = ui->chkPowerAdvPowerSaving->isChecked();
     config->power.enable_motion_detection = ui->chkPowerActivityDetection->isChecked();
 
     // Options
@@ -654,10 +666,7 @@ void WIMUConfigDialog::buttonConnectClicked(){
             ui->lblStatus->setStyleSheet("QLabel{color:blue;}");
             ui->btnConnect->setText(tr("Déconnecter"));
 
-            int load = QMessageBox::question(this,"Chargement de la configuration?","Désirez-vous charger la configuration actuelle du module?",QMessageBox::Yes,QMessageBox::No);
-            if (load == QMessageBox::Yes){
-                buttonReadConfigClicked();
-            }
+
 
         }else{
             ui->lblStatus->setText(tr("Impossible de se connecter: ") + m_wimuDriver.comGetErrorString());
@@ -674,6 +683,11 @@ void WIMUConfigDialog::buttonConnectClicked(){
         // Request settings
         //wimuSendCommand("getset");
         sendCommandToWIMU("getset", WIMUUSBDriver::WimuCmdGetSet, true);
+
+        int load = QMessageBox::question(this,"Chargement de la configuration?","Désirez-vous charger la configuration actuelle du module?",QMessageBox::Yes,QMessageBox::No);
+        if (load == QMessageBox::Yes){
+            buttonReadConfigClicked();
+        }
 
     }else{ // Was unchecked, so disconnect
        m_wimuDriver.wimuDisconnect();

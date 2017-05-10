@@ -42,7 +42,7 @@ namespace WIMU{
 
     typedef struct {
       quint16   enabled_modules;
-      quint8    sampling_rate;
+      quint16   sampling_rate;
       quint8    acc_range;
       quint8    gyro_range;
       quint8    mag_range;

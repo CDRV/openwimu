@@ -556,10 +556,10 @@ Error_TypeDef USB_ProcessRX(void){
 		//if (crc == (usb_rx[usb_rx_rd_ptr][6+sizeof(wimu_config)])+(((unsigned short)usb_rx[usb_rx_rd_ptr][7+sizeof(wimu_config)])<<8)){
                 
                 crc = crc_calc((unsigned char*)&usb_rx[usb_rx_rd_ptr][7], (sizeof(wimu_config)-4));
-		received_crc = (usb_rx[usb_rx_rd_ptr][1+sizeof(wimu_config)]) +
-                               (((uint32_t)usb_rx[usb_rx_rd_ptr][2+sizeof(wimu_config)])<<8) +
-                               (((uint32_t)usb_rx[usb_rx_rd_ptr][3+sizeof(wimu_config)])<<16) +
-                               (((uint32_t)usb_rx[usb_rx_rd_ptr][4+sizeof(wimu_config)])<<24);
+		received_crc = (usb_rx[usb_rx_rd_ptr][7+sizeof(wimu_config)-4]) +
+                               (((uint32_t)usb_rx[usb_rx_rd_ptr][7+sizeof(wimu_config)-3])<<8) +
+                               (((uint32_t)usb_rx[usb_rx_rd_ptr][7+sizeof(wimu_config)-2])<<16) +
+                               (((uint32_t)usb_rx[usb_rx_rd_ptr][7+sizeof(wimu_config)-1])<<24);
 		// Check if CRC is valid
 		if (crc == received_crc || received_crc==0xffffffff){
 					// Write received data into config structure
@@ -819,7 +819,7 @@ void USB_SetMode(ProgramMode mode){
   usb_mode = mode;
 
   PowerOff(); // Disable USB for now
-  msWait(100);
+  msWait(200);
   USB_GlobalInit();
 }
 
@@ -906,8 +906,6 @@ void EXTI15_10_IRQHandler(void)
       // Disconnected - exit USB mode
       //led(LED_BLUE,FALSE);
       usb_mode = MASS_STORAGE; // Reset mode
-      //PowerOff();
-      //init_usb();
 
       /*if (Power_GetState() == POWER_STATE_USB || Power_GetState() == POWER_STATE_USB_ON || Power_GetState() == POWER_STATE_LOWBAT){
         if (Power_GetLastState()!=POWER_STATE_OFF)*/

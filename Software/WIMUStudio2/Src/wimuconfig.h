@@ -5,6 +5,7 @@
 #include <QDataStream>
 
 #include "wimu.h"
+#include "wimusettings.h"
 
 class WIMUConfig : public QObject
 {
@@ -26,7 +27,7 @@ private:
     } WIMUConfig_UIOptions;
 
     typedef struct {
-      quint8   sampling_rate;
+      quint16   sampling_rate; // New in 3.3.4, was quint8 before...
       bool      enable_watchdog;
     } WIMUConfig_GlobalOptions;
 
@@ -74,7 +75,7 @@ private:
     qint32 crc;
 
 public:
-    explicit WIMUConfig(quint8 hw_id, QObject *parent = 0);
+    explicit WIMUConfig(WIMUSettings &settings, QObject *parent = 0);
     explicit WIMUConfig(QObject *parent = 0);
     WIMUConfig(const WIMUConfig &copy, QObject *parent=0);
 
@@ -100,7 +101,9 @@ public:
     quint16 getGyroRangeValue();
     float getMagRangeValue();
 
-    static quint16 size();
+    quint8 getHwId();
+
+    quint16 size();
 
     WIMUConfig  &operator = (const WIMUConfig&);
 
@@ -117,7 +120,7 @@ public:
     WIMUConfig_MagOptions       magneto;           // Magneto options
     WIMUConfig_IMUOptions       imu;               // IMU options
 
-    quint8  hwId;
+    WIMUSettings m_settings;
 
 signals:
 

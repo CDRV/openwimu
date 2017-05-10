@@ -139,6 +139,9 @@ void PushButton_ModeButtonUpdateAction(){
 
 void PushButton_PowerButtonUpdateAction(){
   if (PowerButton.State == DEBOUNCING) return;
+  if (PowerButton.FirstActivationTimeStamp > timestamp +3){
+    PushButton_ResetAll(&PowerButton); // Ignore more than 3 seconds inactivity in button presses
+  }
   // On-Off
   if (PowerButton.NbrOfPress==3){
     PowerButton.RequestedAction = BTN_ON_OFF;

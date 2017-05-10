@@ -728,12 +728,14 @@ void error(unsigned char module, unsigned char code){
     uint8_t i;
     char buf[64];
 
+  __disable_irq();
     // Shutdown everything except CPU & DataLogger & USB & Power
     for (i=0; i<MODULE_INTERNAL_NUM; i++){
         if (i != MODULE_USB && i != MODULE_POWER && i!=MODULE_CPU && i!=MODULE_DATALOGGER)
           Main_Shutdown(i);
     }
 
+  __enable_irq();
     // If datalogger is online, save error
     if (isModuleOnline(MODULE_DATALOGGER)){
           sprintf(buf, "ERROR: Module=%d, Code=%d\r\n", module, code);

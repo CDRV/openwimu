@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=-1029487085
+Checksum=694348607
 [CallStack]
 ShowArgs=0
 [Disassembly]
@@ -69,13 +69,13 @@ ByteLimit=50
 [RegisterFilter]
 FilePath=_ ""
 UseFilter=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
 [Log file]
 LoggingEnabled=_ 0
 LogFile=_ ""
 Category=_ 0
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
 [Breakpoints]
 Count=0
 [ChipconEmu]

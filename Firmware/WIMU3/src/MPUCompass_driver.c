@@ -79,8 +79,8 @@ extern volatile uint8_t MPUCompass_CompassStartAcq;
 
 extern volatile uint32_t SysTick_DelayDownCounter;
 
-uint8_t MPU_SamplingFrequency = 50;
-uint8_t MPUCompass_SamplingFrequency = 50;
+uint8_t MPU_SamplingFrequency = MAX_FS;
+uint8_t MPUCompass_SamplingFrequency = MAX_FS;
 
 TIM_TimeBaseInitTypeDef TIM_TimebaseCompassInit =
 {
@@ -145,6 +145,14 @@ Error_TypeDef MPUCompass_MPUInit(void){
 
     if (wimu_config.general.sampling_rate==200){
       status = MPUCompass_MPUSetFreq(MPUCOMPASS_200Hz);
+    }
+
+    if (wimu_config.general.sampling_rate==500){
+      status = MPUCompass_MPUSetFreq(MPUCOMPASS_500Hz);
+    }
+
+    if (wimu_config.general.sampling_rate==1000){
+      status = MPUCompass_MPUSetFreq(MPUCOMPASS_1000Hz);
     }
 
     if (status!=1)
@@ -309,9 +317,9 @@ void MPUCompass_SetupPower(void)
   GPIO_Init(GPIOB, &GPIO_InitStructure);
   
   GPIO_ResetBits(GPIOB, GPIO_Pin_8);
-  __disable_irq();
+  //__disable_irq();
   msWait(100);
-  __enable_irq();
+  //__enable_irq();
 
 }
 
@@ -533,6 +541,8 @@ void MPUCompass_MPUStop(void)
 
   MPUCompass_MPUAcqState = 0;
 
+  I2C_Cmd(I2C_MPUCOMPASS_PERIPHERAL_ID, DISABLE);
+
 }
 
 uint8_t MPUCompass_MPUIDValidation(void)
@@ -602,7 +612,8 @@ uint8_t MPUCompass_MPUConfigReg(uint8_t acc_range, uint8_t gyro_range)
     // Select external 32.768kHz clock as MPU clock source by writing to CLKSEL bits in PWR_MGMT_1 register
     // Disabling the temperature sensor by setting TEMP_DIS bit in PWR_MGMT_1 register
     I2C_GlobalAccessResult &= MPUCompass_RdRegister(I2C_MPU_ADDR, MPU_REG__PWR_MGMT_1, &RegisterValue, 1);
-    RegisterValue |= (4 << MPU_REG__PWR_MGMT_1__CLKSEL__SHIFT) | MPU_REG__PWR_MGMT_1__TEMP_DIS__MASK;
+    //RegisterValue |= (4 << MPU_REG__PWR_MGMT_1__CLKSEL__SHIFT) | MPU_REG__PWR_MGMT_1__TEMP_DIS__MASK;
+    RegisterValue |= (0 << MPU_REG__PWR_MGMT_1__CLKSEL__SHIFT) | MPU_REG__PWR_MGMT_1__TEMP_DIS__MASK; // Using internal clock
     I2C_GlobalAccessResult &= MPUCompass_WrRegister(I2C_MPU_ADDR, MPU_REG__PWR_MGMT_1, RegisterValue);
 
     #ifdef MPU_FILTERGYRO
@@ -751,7 +762,7 @@ uint8_t MPUCompass_CompassSetFreq(MPUCompassSamplingFreq_TypeDef SamplingFreq)
     
     // Set timer period
     if (SamplingFreq==MPUCOMPASS_50Hz) timer_period = 655;//655; //50.0275 Hz
-    if (SamplingFreq==MPUCOMPASS_100Hz || SamplingFreq==MPUCOMPASS_200Hz) timer_period = 327; //100.208 Hz
+    else timer_period = 327; //100.208 Hz
     //if (SamplingFreq==MPUCOMPASS_200Hz) timer_period = 163; // 201.031 Hz
 
     TIM_TimebaseCompassInit.TIM_Period = timer_period;
@@ -990,11 +1001,13 @@ uint8_t MPUCompass_WrRegister(uint8_t I2C_Address, uint8_t RegisterAddress, uint
 
     //SB POWER MANAGEMENT OFF
     #ifdef POWER_MANAGE
-    if (isModuleOnline(MODULE_DATALOGGER)){
-     if(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_BSY) == RESET) // Wait for data write complete on card before sleeping
-        PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
-    }else{
-        PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
+    if (initialized){
+      if (isModuleOnline(MODULE_DATALOGGER)){
+       if(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_BSY) == RESET) // Wait for data write complete on card before sleeping
+          PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
+      }else{
+          PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
+      }
     }
     #endif
   }
@@ -1073,11 +1086,13 @@ uint8_t   MPUCompass_RdRegister(uint8_t I2C_Address, uint8_t RegisterAddress, ui
       //debug_printf(".");
       //SB POWER MANAGEMENT OFF
       #ifdef POWER_MANAGE
-      if (isModuleOnline(MODULE_DATALOGGER)){
-         if(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_BSY) == RESET) // Wait for data write complete on card before sleeping
+      if (initialized){
+        if (isModuleOnline(MODULE_DATALOGGER)){
+           if(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_BSY) == RESET) // Wait for data write complete on card before sleeping
+              PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
+        }else{
             PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
-      }else{
-          PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
+        }
       }
       #endif
       //debug_printf("\n");

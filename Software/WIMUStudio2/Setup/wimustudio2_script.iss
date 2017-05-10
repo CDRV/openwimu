@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "WIMU Studio 2"
-#define MyAppVersion "2.0.2"
+#define MyAppVersion "2.0.3"
 #define MyAppPublisher "ESTRAD"
 #define MyAppURL "http://www.telereadaptation.com"
 #define MyAppExeName "WIMUStudio2.exe"
@@ -21,11 +21,11 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\WIMUStudio2
+DefaultDirName={pf64}\WIMUStudio2
 DisableProgramGroupPage=yes
-OutputDir=D:\Workspace\WIMU3\WIMUStudio2
+OutputDir=..\..\..\..\..\..\..\Workspace\WIMU3\WIMUStudio2
 OutputBaseFilename=Setup_WIMUStudio_{#MyAppVersionString}
-SetupIconFile=D:\Simon_Dev\WIMuGPS\Workspace\WIMUStudio2\images\WIMU2.ico
+SetupIconFile=..\Src\images\WIMU2.ico
 Compression=lzma2/Ultra
 SolidCompression=true
 InternalCompressLevel=Ultra
@@ -38,40 +38,47 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Application files
-Source: "D:\Workspace\WIMU3\WIMUStudio2\debug\release\WIMUStudio2.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\Simon_Dev\WIMuGPS\Workspace\WIMUStudio2\map.html"; DestDir: "{app}"; Flags: ignoreversion
-Source: "D:\Simon_Dev\WIMuGPS\Workspace\WIMUStudio2\Setup\qt.conf"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\..\..\..\..\Workspace\WIMU3\WIMUStudio2\64bits\Src\release\WIMUStudio2.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\Src\map.html"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\qt.conf"; DestDir: "{app}"; Flags: ignoreversion
 
-; QT 5.7 modules
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5OpenGL.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Network.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5PrintSupport.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Quick.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Qml.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5SerialPort.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+; Support files
+Source: "..\Utils\STM32_DFULoader\Windows\*"; DestDir: "{app}\firmware"; Flags: ignoreversion
+Source: "..\..\..\Firmware\WIMU3\bin\*"; DestDir: "{app}\firmware"; Flags: ignoreversion
+
+; QT 5.8 modules
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Core.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Gui.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5OpenGL.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Network.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5PrintSupport.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Positioning.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Quick.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5QuickWidgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Qml.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5SerialPort.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Svg.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5Widgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+
 
 ; QT WebEngine
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5WebChannel.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5WebEngine.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5WebEngineCore.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\Qt5WebEngineWidgets.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\bin\QtWebEngineProcess.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\translations\qtwebengine_locales\*"; DestDir: "{app}\qtwebengine_locales"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5WebChannel.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5WebEngine.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5WebEngineCore.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\Qt5WebEngineWidgets.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\bin\QtWebEngineProcess.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\translations\qtwebengine_locales\*"; DestDir: "{app}\qtwebengine_locales"; Flags: ignoreversion
 
 ; QWT
 Source: "C:\Qwt-6.1.3\lib\qwt.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 ; QT Plugins
-Source: "C:\Qt\5.7\msvc2013\plugins\platforms\qwindows.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\plugins\imageformats\qgif.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\plugins\imageformats\qico.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\plugins\imageformats\qjpeg.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
-Source: "C:\Qt\5.7\msvc2013\plugins\imageformats\qsvg.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\plugins\platforms\qwindows.dll"; DestDir: "{app}\platforms"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\plugins\imageformats\qgif.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\plugins\imageformats\qico.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\plugins\imageformats\qjpeg.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
+Source: "C:\Qt\5.8\msvc2015_64\plugins\imageformats\qsvg.dll"; DestDir: "{app}\imageformats"; Flags: ignoreversion
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 

@@ -36,6 +36,8 @@
 #include "usb_lib.h"
 #include "usb.h"
 
+#include "power.h"
+
 #include "VC__usb_prop.h"
 #include "VC__usb_desc.h"
 
@@ -149,6 +151,7 @@ void Leave_LowPowerMode(void)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
+   // Power_StateUpdate();
   }
   else
   {

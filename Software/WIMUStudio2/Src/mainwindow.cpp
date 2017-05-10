@@ -1309,7 +1309,7 @@ void MainWindow::folderItemClicked(QTreeWidgetItem* item, int col){
     }
 
     if (QFile::exists(paths.first() + "/CONFIG.WCF")){
-        m_wimuConfig.hwId = m_wimuSettings.hw_id;
+        //m_wimuConfig.hwId = m_wimuSettings->getHwId();
         m_wimuConfig.loadFromFile(paths.first() + "/CONFIG.WCF");
     }else{
         addToLog("Aucun fichier de configuration valide n'a été trouvé.",WIMU::LogError);

@@ -36,6 +36,8 @@
 #include "MS__mass_mal.h"
 #include "MS__usb_prop.h"
 
+#include "power.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -209,6 +211,7 @@ void Mass_Storage_SetConfiguration(void)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
+    Power_StateUpdate();
 
     ClearDTOG_TX(ENDP1);
     ClearDTOG_RX(ENDP2);

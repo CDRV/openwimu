@@ -63,8 +63,11 @@ private:
 
     bool                    m_binStreaming;
 
+    WIMUSettings            m_currentSettings;
+
 private slots:
     void serialPortDataReady();
+    void serialPortBytesWritten(qint64 bytes);
 
 signals:
     void comAboutToClose();

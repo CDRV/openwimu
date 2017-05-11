@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>783</width>
-    <height>656</height>
+    <width>1336</width>
+    <height>832</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -450,12 +450,12 @@ QListWidget::item:selected {color:black;}</string>
            </property>
            <property name="maximumSize">
             <size>
-             <width>200</width>
+             <width>250</width>
              <height>16777215</height>
             </size>
            </property>
            <property name="currentIndex">
-            <number>0</number>
+            <number>1</number>
            </property>
            <widget class="QWidget" name="pgDisk">
             <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -641,6 +641,9 @@ QListWidget::item:selected {color:black;}</string>
                 <string>Commandes BLE</string>
                </property>
                <layout class="QVBoxLayout" name="verticalLayout_4">
+                <property name="spacing">
+                 <number>10</number>
+                </property>
                 <property name="leftMargin">
                  <number>2</number>
                 </property>
@@ -707,6 +710,12 @@ QListWidget::item:selected {color:black;}</string>
                 </item>
                 <item>
                  <widget class="QPushButton" name="btnBLERecord">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
                   <property name="cursor">
                    <cursorShape>PointingHandCursor</cursorShape>
                   </property>

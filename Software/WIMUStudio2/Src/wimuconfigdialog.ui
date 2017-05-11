@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>650</width>
-    <height>577</height>
+    <width>764</width>
+    <height>591</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,7 @@ QCheckBox::indicator:unchecked,QListWidget::indicator:unchecked{ background-colo
 QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rgb(0,255,0);border-radius:3px;}</string>
   </property>
   <property name="modal">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -105,7 +105,7 @@ QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rg
                 <x>0</x>
                 <y>0</y>
                 <width>200</width>
-                <height>192</height>
+                <height>133</height>
                </rect>
               </property>
               <attribute name="icon">
@@ -206,7 +206,7 @@ QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rg
                 <x>0</x>
                 <y>0</y>
                 <width>200</width>
-                <height>192</height>
+                <height>133</height>
                </rect>
               </property>
               <attribute name="icon">
@@ -348,8 +348,8 @@ QCheckBox::indicator:checked,QListWidget::indicator:checked {background-color:rg
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>200</width>
-                <height>192</height>
+                <width>185</width>
+                <height>176</height>
                </rect>
               </property>
               <attribute name="icon">
@@ -1110,7 +1110,7 @@ de la position GPS</string>
                  </property>
                  <property name="minimumSize">
                   <size>
-                   <width>50</width>
+                   <width>80</width>
                    <height>25</height>
                   </size>
                  </property>

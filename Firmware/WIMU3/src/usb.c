@@ -817,10 +817,11 @@ Error_TypeDef USB_SendChar(char chr){
 
 void USB_SetMode(ProgramMode mode){
   usb_mode = mode;
-
+  
   PowerOff(); // Disable USB for now
   msWait(200);
   USB_GlobalInit();
+
 }
 
 void USBDetect_Config(void)

@@ -1192,14 +1192,23 @@ void main_buttons(void){
         USB_ModeSelection();
         init_usb();
       }*/
+      Power_ResetStateTime();
       if (Power_GetState()==POWER_STATE_USB_MASS){
         USB_SetMode(VIRTUAL_COM);
         BatteryMonitoring_Config();
         Power_SetState(POWER_STATE_USB_COM);
+       
+        msWait(100);
+        Buzzer_Start(50);
+        msWait(100);
+        Buzzer_Start(50);
       }else{
         if (Power_GetState()==POWER_STATE_USB_COM){
           USB_SetMode(MASS_STORAGE);
           Power_SetState(POWER_STATE_USB_MASS);
+
+          msWait(100);
+          Buzzer_Start(50);
         }
       }
 

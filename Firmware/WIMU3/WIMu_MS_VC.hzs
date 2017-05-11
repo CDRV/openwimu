@@ -1,10 +1,10 @@
 <!DOCTYPE CrossStudio_for_ARM_Session_File>
 <session>
  <Bookmarks>
-  <BookmarkItem column="-1" line="67" path="Z:\Simon_Dev\WIMuGPS\Workspace\WIMU2\src\MPUCompass_driver.c" number="8" extra="NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;" name="unnamed" color="5" />
+  <BookmarkItem column="-1" line="74" path="Z:\Simon_Dev\WIMuGPS\Workspace\WIMU2\src\MPUCompass_driver.c" number="8" extra="NVIC_InitStructure.NVIC_IRQChannelCmd = DISABLE;" name="unnamed" color="5" />
  </Bookmarks>
  <Breakpoints>
-  <BreakpointListItem line="153" action="" hardwareBreakpoint="" trigger="" useHWbreakpoint="false" group="Breakpoints" type="Breakpoint" state="2" counter="0" isFunctionBreakpoint="false" filename="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__hw_config.c" expression="" />
+  <BreakpointListItem line="510" action="" hardwareBreakpoint="" trigger="" useHWbreakpoint="false" group="Breakpoints" type="Breakpoint" state="2" counter="0" isFunctionBreakpoint="false" filename="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\main.c" expression="" />
  </Breakpoints>
  <ExecutionProfileWindow/>
  <Memory1>
@@ -58,16 +58,17 @@
  </TraceWindow>
  <Watch1>
   <Watches active="1" update="Each Second" >
-   <Watchpoint linenumber="0" radix="16" name="power_is_stopped" expression="power_is_stopped" filename="" />
-   <Watchpoint linenumber="0" radix="16" name="power_is_charging" expression="power_is_charging" filename="" />
-   <Watchpoint linenumber="0" radix="16" name="last_power_state" expression="last_power_state" filename="" />
-   <Watchpoint linenumber="0" radix="16" name="power_state" expression="power_state" filename="" />
-   <Watchpoint linenumber="0" radix="-1" name="wimu_settings" expression="wimu_settings" filename="" />
-   <Watchpoint evalMode="2" linenumber="0" numelements="10" evalType="0" radix="16" name="i_mod_status" expression="i_mod_status" filename="" />
-   <Watchpoint linenumber="0" radix="16" name="bDeviceState" expression="bDeviceState" filename="" />
-   <Watchpoint linenumber="0" radix="16" name="wimu_config" expression="wimu_config" filename="" />
-   <Watchpoint linenumber="0" radix="16" name="ble_control" expression="ble_control" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="Bot_State" expression="Bot_State" filename="" />
    <Watchpoint linenumber="0" radix="11" name="timestamp" expression="timestamp" filename="" />
+   <Watchpoint linenumber="0" radix="-1" name="wimu_settings" expression="wimu_settings" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="wimu_config" expression="wimu_config" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="bDeviceState" expression="bDeviceState" filename="" />
+   <Watchpoint evalMode="2" linenumber="0" numelements="10" evalType="0" radix="16" name="i_mod_status" expression="i_mod_status" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="power_state" expression="power_state" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="last_power_state" expression="last_power_state" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="power_is_charging" expression="power_is_charging" filename="" />
+   <Watchpoint linenumber="0" radix="16" name="power_is_stopped" expression="power_is_stopped" filename="" />
+   <Watchpoint linenumber="0" radix="11" name="power_state_time" expression="power_state_time" filename="" />
   </Watches>
  </Watch1>
  <Watch2>
@@ -80,28 +81,12 @@
   <Watches active="0" update="Never" />
  </Watch4>
  <Files>
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\main.c" y="1205" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\main.c" left="0" selected="0" name="unnamed" top="1203" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\gps.c" y="271" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\gps.c" left="0" selected="0" name="unnamed" top="253" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\config.h" y="103" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\config.h" left="0" selected="0" name="unnamed" top="69" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\gps.h" y="32" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\gps.h" left="0" selected="0" name="unnamed" top="18" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\ble.c" y="0" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\ble.c" left="0" selected="0" name="unnamed" top="204" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\utils.c" y="392" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\utils.c" left="0" selected="0" name="unnamed" top="362" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__stm32_it.c" y="262" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__stm32_it.c" left="0" selected="0" name="unnamed" top="262" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="40" debugPath="D:\simon_dev\wimugps\workspace\openwimu\firmware\wimu3\src\buttons.c" y="161" path="D:\simon_dev\wimugps\workspace\openwimu\firmware\wimu3\src\buttons.c" left="0" selected="1" name="unnamed" top="138" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\power.c" y="261" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\power.c" left="0" selected="0" name="unnamed" top="234" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\Libraries\CMSIS\include.\cmsis_gcc.h" y="384" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\Libraries\CMSIS\include.\cmsis_gcc.h" left="0" selected="0" name="unnamed" top="366" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MPUCompass_driver.c" y="550" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MPUCompass_driver.c" left="0" selected="0" name="unnamed" top="539" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\usb.c" y="175" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\usb.c" left="0" selected="0" name="unnamed" top="156" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MS__usb_prop.c" y="426" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MS__usb_prop.c" left="0" selected="0" name="unnamed" top="408" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\usb_pwr.h" y="53" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\usb_pwr.h" left="0" selected="0" name="unnamed" top="24" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__hw_config.c" y="74" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__hw_config.c" left="0" selected="0" name="unnamed" top="86" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\VC__usb_prop.c" y="222" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\VC__usb_prop.c" left="0" selected="0" name="unnamed" top="192" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MS__usb_scsi.c" y="243" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MS__usb_scsi.c" left="0" selected="0" name="unnamed" top="204" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\datalogger.c" y="111" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\datalogger.c" left="0" selected="0" name="unnamed" top="93" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\MPUCompass_driver.h" y="9" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\MPUCompass_driver.h" left="0" selected="0" name="unnamed" top="0" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\utils.h" y="46" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\utils.h" left="0" selected="0" name="unnamed" top="27" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MS__mass_mal.c" y="69" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\MS__mass_mal.c" left="0" selected="0" name="unnamed" top="72" />
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\simon_dev\wimugps\workspace\openwimu\firmware\wimu3\src\usb_pwr.c" y="94" path="D:\simon_dev\wimugps\workspace\openwimu\firmware\wimu3\src\usb_pwr.c" left="0" selected="0" name="unnamed" top="77" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="27" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\main.c" y="80" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\main.c" left="0" selected="1" name="unnamed" top="56" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="15" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\power.c" y="408" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\power.c" left="0" selected="0" name="unnamed" top="390" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__stm32_it.c" y="213" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\Merged__stm32_it.c" left="0" selected="0" name="unnamed" top="195" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\power.h" y="96" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\power.h" left="0" selected="0" name="unnamed" top="69" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\usb.c" y="888" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\src\usb.c" left="0" selected="0" name="unnamed" top="870" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="0" debugPath="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\config.h" y="10" path="D:\Simon_Dev\WIMuGPS\Workspace\openwimu\Firmware\WIMU3\inc\config.h" left="0" selected="0" name="unnamed" top="0" />
  </Files>
  <ARMCrossStudioWindow activeProject="WIMU3" autoConnectTarget="USB CrossConnect for ARM" debugSearchFileMap="\Volumes\HD2\products\build\crossworks\arm\crossworks_v2\shared\target\libc\arm\__int64_udivmod.s
 

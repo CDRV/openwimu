@@ -329,7 +329,7 @@ bool Power_StateUpdate(){
      //} else{
 
      // Check if we need to stop the module - plugged in USB
-    if (power_state==POWER_STATE_USB_MASS || power_state==POWER_STATE_USB_COM){
+    if (power_state==POWER_STATE_USB_MASS){
       if (power_state_time >= 5){ // Wait 5 seconds for USB state to change
         // Check if stay in that mode or not...
         if (bDeviceState==UNCONNECTED){

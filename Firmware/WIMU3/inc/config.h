@@ -148,8 +148,8 @@ typedef struct __attribute__((__packed__)) {
 ///////////
 // CLOCK //
 ///////////
-#define CLK_F_APROX 18000000 // Approximation of the CPU MCLK, 18 MHz
-#define CLK_F       17989632	   // More accurate value of the CPU MCLK (N+1)*Freq, see "init()"
+//#define CLK_F_APROX 18000000 // Approximation of the CPU MCLK, 18 MHz
+//#define CLK_F       17989632	   // More accurate value of the CPU MCLK (N+1)*Freq, see "init()"
 
 //#define US_CYCLE			18	// Number of clock cycle to have a micro-second
 

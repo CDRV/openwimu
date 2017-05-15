@@ -94,13 +94,18 @@ SensorDisplay::SensorDisplay(WIMUConfig* config, WIMUSettings* settings, QWidget
     m_webMap = new QWebEngineView(ui->wdgGPSMap);
     ui->wdgGPSMap->layout()->addWidget(m_webMap);
 
-    QString mapPath = QApplication::applicationDirPath() + "/map.html";
+    //QString mapPath = QApplication::applicationDirPath() + "/map.html";
+    QString mapPath = "qrc:/html/map.html";
+    m_webMap->setUrl(QUrl(mapPath));
+
+#if 0
     QFileInfo mapInfo(mapPath);
     if (!mapInfo.exists()){
         qDebug() << "ERREUR: Gabarit de carte " + mapPath + " introuvable!";
     }else{
         m_webMap->setUrl(QUrl(mapPath));
     }
+#endif
 
     ui->lblGPSStatus->setText("Aucune position.");
     ui->frameGPSPosition->setVisible(false);

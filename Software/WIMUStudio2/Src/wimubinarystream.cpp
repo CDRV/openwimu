@@ -200,6 +200,8 @@ WIMULog WIMUBinaryStream::convertToWIMULog(quint8 hw_id){
     log.timestamp |= (((quint32)m_data.at(1)) << 8) & 0x0000ff00;
     log.timestamp |= ((quint32)m_data.at(0)) & 0x000000ff;
 
+    //qDebug() << "Log.timestamp " << log.timestamp;
+
     // Convert rest of data to string
     QString data(m_data.right(m_data.length()-4));
 

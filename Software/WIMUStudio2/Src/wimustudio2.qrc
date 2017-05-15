@@ -70,4 +70,7 @@
     <qresource prefix="/3d">
         <file>images/WIMU3D.obj</file>
     </qresource>
+    <qresource prefix="/html">
+        <file>map.html</file>
+    </qresource>
 </RCC>

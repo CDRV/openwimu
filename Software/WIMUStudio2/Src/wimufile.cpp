@@ -310,6 +310,14 @@ QByteArray WIMUFile::readSample(){
         }else{
             // LOG File = read a whole line
             rval = m_fileBuffer.readLine();
+
+            //qDebug() << rval;
+
+            char last = 0;
+            m_fileBuffer.peek(&last,1);
+            if ( last == '\r' && !rval.endsWith("\r\n") )
+                rval += m_fileBuffer.read(1);
+
             // In case we had a "\n" or "\r" in the timestamp, try to read again..
             while (rval.count()<4 && !m_fileBuffer.atEnd()){
                 rval = rval.append(m_fileBuffer.readLine());

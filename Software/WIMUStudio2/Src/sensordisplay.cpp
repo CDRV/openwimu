@@ -180,14 +180,18 @@ void SensorDisplay::addIMUFrame(WIMU::IMUFrame_Struct &frame){
         if (frame.quat_valid){
             m_dataIMU.at(i)->addSample(frame.quaternion[i]);
             minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(i)->min()));
-            minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(i)->max()));
+            //minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(i)->max()));
+            minMaxIMU.setY(1);
+            minMaxIMU.setX(-1);
         }
     }
     //qDebug() << m_dataAcc.last()->sample(0).y() << m_dataAcc.last()->sample(1).y() << m_dataAcc.last()->sample(2).y();
     if (frame.quat_valid){
         m_dataIMU.at(3)->addSample(frame.quaternion[3]);
-        minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(3)->min()));
-        minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(3)->max()));
+        /*minMaxIMU.setX(qMin((float)minMaxIMU.x(), m_dataIMU.at(3)->min()));
+        minMaxIMU.setY(qMax((float)minMaxIMU.y(), m_dataIMU.at(3)->max()));*/
+        minMaxIMU.setY(1);
+        minMaxIMU.setX(-1);
     }
 
     if (frame.acc_valid){
@@ -543,7 +547,7 @@ void SensorDisplay::displayTimeWasChanged(quint32 new_time){
    QPointF minMaxAcc(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
    QPointF minMaxGyro(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
    QPointF minMaxMag(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
-   QPointF minMaxIMU(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
+   //QPointF minMaxIMU(std::numeric_limits<float>::max(), std::numeric_limits<float>::min());
 
    for (int i=1; i<m_dataStartTimes.count(); i++){
        if (m_dataStartTimes.at(i) > new_time && m_dataStartTimes.at(i-1) <= new_time ){
@@ -625,7 +629,11 @@ void SensorDisplay::displayTimeWasChanged(quint32 new_time){
                        addPowerFrame(power);
                    }
                    if (sensor=="IMU"){
-                       // TODO
+                       QList<WIMU::IMUFrame_Struct> imu = converter.convertToIMUFrames(m_config);
+                       for (int i=0; i<imu.count(); i++){
+
+                           addIMUFrame(imu[i]);
+                       }
                    }
                }
            }else{ // GPS Data

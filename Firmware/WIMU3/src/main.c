@@ -197,12 +197,14 @@ int main(void){
         //////////////////////
         // IMU
         /////////////////////
-        main_imu();
+        if (isModuleOnline(MODULE_IMU)){
+          main_imu();
+        }
 
       #ifdef POWER_MANAGE
-        /*if (i_mod_status[MODULE_DATALOGGER]==MODULE_ONLINE)
-          if(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_BSY) == RESET); // Wait for data write complete on card before sleeping
-             PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);*/
+        if (isModuleOnline(MODULE_DATALOGGER))
+          if(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_BSY) == RESET) // Wait for data write complete on card before sleeping
+             PWR_EnterSleepMode(PWR_Regulator_ON, PWR_SLEEPEntry_WFI);
       #endif
     
     } // Main While
@@ -1536,7 +1538,7 @@ void Main_ManageNewPowerState(){
         //last_power_state = last_state; // Restore real last state, since reset will have cleared it to default
       }
       if (isModuleOnline(MODULE_DATALOGGER)){
-        datalog_save_data((unsigned char*)"WIMUGPS ON\n\r",12, TRUE, MODULE_CPU,0);
+        datalog_save_data((unsigned char*)"WIMUGPS ON\r\n",12, TRUE, MODULE_CPU,0);
         msWait(200);
       }
     break;

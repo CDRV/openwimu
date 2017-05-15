@@ -150,6 +150,10 @@ unsigned char reset_datalogger(void){
 // None
 //------------------------------------------------------------------------------
 void stop_datalogger(void){
+
+        //TEST
+        //f_close(&dos_files[1]);
+  
 	//unsigned char tmp;
 	f_mount(0, NULL, 1); // Unmount file system
 	
@@ -281,6 +285,10 @@ unsigned char datalog_save_data(unsigned char* data, unsigned short length, bool
 	FRESULT err[5] = {FR_OK,FR_OK,FR_OK,FR_OK,FR_OK};
 	char buf[32];
 	unsigned int bytes_count;
+        
+        unsigned char* write_buffer;
+        unsigned int buffer_len;
+
 	//unsigned char handle;
 	//unsigned long int fileSize;
 	#ifdef DOS_TIMEOUT_RESET
@@ -292,6 +300,8 @@ unsigned char datalog_save_data(unsigned char* data, unsigned short length, bool
          if (usb_mode==MASS_STORAGE && USB_IsConnected()){
           return 0; // Don't write anything while in mass storage and connected
         }
+
+      
 
         //LED blinking is config is set
 	if (wimu_config.ui.write_led){
@@ -312,74 +322,47 @@ unsigned char datalog_save_data(unsigned char* data, unsigned short length, bool
 
        
 	
-	if (internal==TRUE){
+	if (internal==true){
 		switch(module){
 			case MODULE_CPU:
-				err[0] = f_open(&dos_files[0], (TCHAR*) "LOG.DAT", FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) "LOG.DAT", FA_WRITE | FA_OPEN_APPEND);
 			break;
 			case MODULE_GPS:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_gps_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_gps_filename[0], FA_WRITE | FA_OPEN_APPEND);
 			break;
 			case MODULE_ACC:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_acc_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_acc_filename[0], FA_WRITE | FA_OPEN_APPEND);
+                                //TEST
+                                /*if (dos_files[1].flag == 0)
+                                  f_open(&dos_files[1], (TCHAR*) &dos_acc_filename[0], FA_WRITE | FA_OPEN_APPEND);*/
 			break;
 			case MODULE_GYRO:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_gyro_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_gyro_filename[0], FA_WRITE | FA_OPEN_APPEND);
 			break;
 			case MODULE_MAGNETO:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_mag_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_mag_filename[0], FA_WRITE | FA_OPEN_APPEND);
 			break;
 			case MODULE_POWER:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_power_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_power_filename[0], FA_WRITE | FA_OPEN_APPEND);
 			break;
                         case MODULE_IMU:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_quaternion_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
+				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_quaternion_filename[0], FA_WRITE | FA_OPEN_APPEND);
 			break;
 		}
 		
 	}else{
-		/*switch(module){
-			case EXT_MODULE_SONARS:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_sonars_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
-			break;
-			case EXT_MODULE_FSR:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_fsr_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
-			break;
-			case EXT_MODULE_JOYSTICK:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_joy_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
-			break;
-			case EXT_MODULE_ENCODERS:
-			case EXT_MODULE_WIENCODER:
-				err[0] = f_open(&dos_files[0], (TCHAR*) &dos_encoders_filename[0], FA_WRITE | FA_OPEN_ALWAYS);
-			break;
-		}*/
+            //TODO: Save external sensors data...
+		
 	}
-	/*
-	if (internal==FALSE){
-		module += MODULE_NUM; // Correct index for open file list	
-	}
-	*/
 	
 	// Move to end of file to append data
-	//err[1] = f_lseek(&dos_files[0], dos_files[0].fsize);
-        err[1] = f_lseek(&dos_files[0], f_size(&dos_files[0]));
+        //err[1] = f_lseek(&dos_files[0], f_size(&dos_files[0])); // Deprecated with new option "FA_OPEN_APPEND"
+       // err[1] = FR_OK;
 	
 	//handle = datalog_get_modulefile(internal, module);
-	err[2] = FR_OK;
+	//err[2] = FR_OK;
         
-        //update_timestampRTC(FALSE); //TODO: Find a way not to always resync timestamp from RTC (optimize)
-
-	#ifdef GPS_MODE_2
-		if (module != MODULE_GPS) //No timestamp on SIRF data		
-	#endif
-	//Timestamp
-        
-	if (time!=0)
-		err[2] = f_write(&dos_files[0], (unsigned char*) &time, 4, &bytes_count);
-	else
-		err[2] = f_write(&dos_files[0], (unsigned char*) &timestamp, 4, &bytes_count);
-	
-	//Data
+        // Allocate buffer
         if (module == MODULE_CPU){
           // Convert Timestamp to text
           if (time!=0)
@@ -387,14 +370,40 @@ unsigned char datalog_save_data(unsigned char* data, unsigned short length, bool
           else
             sprintf(buf, ",%ld,",timestamp);
           bytes_count = strlen(buf);
-          err[2] = f_write(&dos_files[0], buf, bytes_count, &bytes_count);
+          //err[2] = f_write(&dos_files[0], buf, bytes_count, &bytes_count);
+          buffer_len = bytes_count + length + 4 ; // 4 bytes = timestamp
+          write_buffer = malloc(buffer_len);
+          memcpy(&write_buffer[4], buf, bytes_count);
+          memcpy(&write_buffer[4+bytes_count], data, length);
+        }else{
+          buffer_len = length + 4;
+          write_buffer = malloc(buffer_len); // 4 bytes = timestamp
+          memcpy(&write_buffer[4], data, length);
         }
 
-	err[3] = f_write(&dos_files[0], data, length, &bytes_count);
+	#ifdef GPS_MODE_2
+		if (module != MODULE_GPS) //No timestamp on SIRF data		
+	#endif
+	//Timestamp
+	if (time!=0)
+		//err[2] = f_write(&dos_files[0], (unsigned char*) &time, 4, &bytes_count);
+                memcpy(&write_buffer[0], (unsigned char*) &time, 4);
+	else
+		//err[2] = f_write(&dos_files[0], (unsigned char*) &timestamp, 4, &bytes_count);
+                memcpy(&write_buffer[0], (unsigned char*) &timestamp, 4);
+	
+	//Data
+	//err[3] = f_write(&dos_files[0], data, length, &bytes_count);
+        //if (module!=MODULE_ACC)
+          err[3] = f_write(&dos_files[0], write_buffer, buffer_len, &bytes_count);
+        /*else
+          err[3] = f_write(&dos_files[1], write_buffer, buffer_len, &bytes_count);*/
+        free(write_buffer);
 			
 		
 	// Close the file
-	err[4] = f_close(&dos_files[0]);	
+        //if (module != MODULE_ACC)
+          err[4] = f_close(&dos_files[0]);	
 	
 	#ifdef DOS_TIMEOUT_RESET
 	time = time_count(FALSE);
@@ -404,20 +413,8 @@ unsigned char datalog_save_data(unsigned char* data, unsigned short length, bool
 		// DOSONCHIP error	
 		status = err[0] + err[1] + err[2] + err[3] + err[4];  	
 		if (status!=0){
-			/*i_mod_status[MODULE_DATALOGGER]=MODULE_RESET; //Request DOSONCHIP reset
-			//datalog_save_data((unsigned char*)"Datalogger: Error!\r\n",20, TRUE, MODULE_CPU);
-			sprintf((char*)buf, "Log Error: %d in %d\n\r", status, module);
-			datalog_save_data(buf,strlen((char*)buf), TRUE, MODULE_CPU);
-			dos_timeouts++;
-			if (dos_timeouts<DOS_STRIKEOUT)
-				i_mod_status[MODULE_DATALOGGER]=MODULE_ONLINE; //Cancel Request*/
-			
 			dos_errors++;	
-			
-                        //--TODO: Blink LED while writing is set
-			/*if ((wimu_config.log_opt & CONFIG_LOG_LED)>0)	
-				led(LED2,TRUE);*/
-				
+			                    				
 			if (dos_errors>=DOS_MAX_ERRORS){
 				//Amount of write errors exceeded the maximum threshold
 				setModuleState(MODULE_DATALOGGER, STATE_RESET);  // Provokes a reset of the card
@@ -425,27 +422,13 @@ unsigned char datalog_save_data(unsigned char* data, unsigned short length, bool
 			}
                         
 		}
-		/*
-		#ifdef DOS_TIMEOUT_RESET
-			// Timeout
-			if (time > DOS_TIMEOUT){
-				i_mod_status[MODULE_DATALOGGER]=MODULE_RESET; //Request DOSONCHIP reset
-				//datalog_save_data((unsigned char*)"Datalogger: Timeout!\r\n",22, TRUE, MODULE_CPU);
-				dos_timeouts++;
-				if (dos_timeouts<DOS_STRIKEOUT)
-					i_mod_status[MODULE_DATALOGGER]=MODULE_ONLINE;  //Cancel reset request
-			}
-		#endif
-	}*/
 	
-        //--TODO: LED indicator if flag is on
+        //LED indicator if flag is on
         if (wimu_config.ui.write_led){
           if ((ble_control.status & BLE_CTRL_FLAG_REC) ==0)
               led(LED_RED, FALSE, NO_PRIORITY);
              else
               led(LED_BLUE, FALSE, NO_PRIORITY);
-          //led(LED_BLUE,FALSE, NO_PRIORITY);
-          //led(LED_RED,FALSE);
 	}
 
 	return status;

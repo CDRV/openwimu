@@ -69,18 +69,19 @@ WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
     if (m_idModule!=WIMU::MODULE_IMU)
         return frame;
 
-
     QDataStream ds(m_data);
     ds.setByteOrder(QDataStream::LittleEndian);
     ds.setFloatingPointPrecision(QDataStream::SinglePrecision);
 
-    ds >> frame.frame_num;
-    for (int i=0; i<3; i++)
-        ds >> frame.acc_data[i];
-    for (int i=0; i<3; i++)
-        ds >> frame.gyro_data[i];
-    for (int i=0; i<3; i++)
-        ds >> frame.mag_data[i];
+    if (!m_fromFile){
+        ds >> frame.frame_num;
+        for (int i=0; i<3; i++)
+            ds >> frame.acc_data[i];
+        for (int i=0; i<3; i++)
+            ds >> frame.gyro_data[i];
+        for (int i=0; i<3; i++)
+            ds >> frame.mag_data[i];
+    }
     for (int i=0; i<4; i++)
         ds >> frame.quaternion[i];
 
@@ -90,6 +91,42 @@ WIMU::IMUFrame_Struct WIMUBinaryStream::convertToIMUFrame(){
     frame.quat_valid = true;
 
     return frame;
+}
+
+QList<WIMU::IMUFrame_Struct> WIMUBinaryStream::convertToIMUFrames(WIMUConfig* config){
+
+    QList<WIMU::IMUFrame_Struct> rval;
+
+    if (m_fromFile){
+        // Create all samples
+        rval.reserve(config->general.sampling_rate);
+        for (int i=0; i<config->general.sampling_rate; i++){
+            WIMU::IMUFrame_Struct imu;
+            imu.acc_valid=false;
+            imu.gyro_valid=false;
+            imu.mag_valid=false;
+            imu.quat_valid = true;
+            rval.append(imu);
+
+        }
+
+        QDataStream reader(m_data);
+        reader.setByteOrder(QDataStream::LittleEndian);
+        reader.setFloatingPointPrecision(QDataStream::SinglePrecision);
+        float fvalue;
+        for (int i=0; i<4; i++){ // 4 channels
+            for (int j=0; j<config->general.sampling_rate; j++){ // All samples
+                reader >> fvalue;
+                rval[j].quaternion[i] = fvalue;
+            }
+        }
+
+    }else{
+        qDebug() << "convertToIMUFrames: Not a file - unexpected results expected!";
+    }
+
+    return rval;
+
 }
 
 WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(WIMUConfig *config){

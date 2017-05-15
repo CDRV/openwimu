@@ -25,7 +25,8 @@ public:
         WIMULOG_USBVCOM,
         WIMULOG_MARK,
         WIMULOG_CORRECTON,
-        WIMULOG_CORRECTOFF
+        WIMULOG_CORRECTOFF,
+        WIMULOG_DATAEND
     } WIMULogTypes;
 
     quint32         timestamp;

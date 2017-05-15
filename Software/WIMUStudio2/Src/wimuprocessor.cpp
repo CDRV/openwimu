@@ -1135,7 +1135,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
             end_time = data_ends.at(i);
     }
 
-    for (quint32 j=start_time;j<=end_time+86400; j+=86400){
+    for (quint32 j=previousMidnight(start_time)+86400;j<=previousMidnight(end_time)+86400; j+=86400){
         QDateTime data_date = QDateTime(QDateTime::fromSecsSinceEpoch(j,Qt::LocalTime).date());
         //data_date = previousMidnight(data_date);
         if (!dates.contains(data_date)){
@@ -1144,7 +1144,7 @@ void WimuProcessor::combineDataSet(QString path, QStringList &folders){
         }
     }
     //qDebug() << "---";
-   // qDebug() << dates;
+    //qDebug() << dates;
     QDir folder(path);
 
     // Create PreProcess folder

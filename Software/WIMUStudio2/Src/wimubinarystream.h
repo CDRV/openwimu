@@ -23,6 +23,7 @@ public:
 
     // IMU
     WIMU::IMUFrame_Struct convertToIMUFrame();
+    QList<WIMU::IMUFrame_Struct> convertToIMUFrames(WIMUConfig *config);
 
     // GPS
     quint8 getGPSMessageID();

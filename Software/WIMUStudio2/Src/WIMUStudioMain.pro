@@ -78,7 +78,7 @@ FORMS    += mainwindow.ui \
 
 #include (C:\Qwt-6.1.3\features\qwt.prf)
 #TODO - Verify debug file name for qwt
-CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwt
+CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwtd
 CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../Libs/Qwt-6.1.3/lib -lqwt
 
 win32 {

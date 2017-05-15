@@ -84,6 +84,21 @@ void TimeBrowser::updateDisplay(){
     quint32 last_ts=1;
     m_scene.clear();
 
+    // Check if we have more data than reflected by the logs
+    for (int i=0; i<m_dataEnds.count(); i++){
+        last_ts = qMax(last_ts, m_dataEnds.at(i));
+    }
+
+    if (last_ts > m_logs.last().timestamp){
+        // Add "log" for data end
+        WIMULog new_log;
+        new_log.log_type = WIMULog::WIMULOG_DATAEND;
+        new_log.log = "Detected end of data";
+        new_log.timestamp = last_ts;
+
+        m_logs.append(new_log);
+    }
+
     // Set limits
     if (m_logs.count()>0){
        initial_ts = m_logs.first().timestamp;
@@ -111,6 +126,7 @@ void TimeBrowser::updateDisplay(){
       case WIMULog::WIMULOG_CORRECTON:
       case WIMULog::WIMULOG_CORRECTOFF:
       case WIMULog::WIMULOG_MARK:
+      case WIMULog::WIMULOG_DATAEND:
           fill_color = ui->lblOK->palette().color(QPalette::Window);
           break;
       case WIMULog::WIMULOG_CHARGEON:
@@ -364,7 +380,7 @@ void TimeBrowser::btnPlayClicked(){
 void TimeBrowser::playTimerTimeout(){
     m_currentTime+=ui->spinSpeed->value();
     if (m_dataEnds.count()>0){
-        if (m_currentTime > m_dataEnds.last()){
+        if (m_currentTime > m_logs.last().timestamp/*m_dataEnds.last()*/){
             btnPlayClicked(); // Stop playback
             return;
         }

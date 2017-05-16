@@ -196,10 +196,8 @@ int main(void){
 
         //////////////////////
         // IMU
-        /////////////////////
-        if (isModuleOnline(MODULE_IMU)){
-          main_imu();
-        }
+        /////////////////////     
+        main_imu();
 
       #ifdef POWER_MANAGE
         if (isModuleOnline(MODULE_DATALOGGER))
@@ -221,8 +219,9 @@ int main(void){
 // Initialization function for the system.
 //------------------------------------------------------------------------------
 bool Main_Init(void){
-  unsigned char i;
+  uint16_t i;
   uint32_t crc;
+  uint16_t flag;
 
   //////////////////////////////
   // Initialize Clocks
@@ -321,8 +320,9 @@ bool Main_Init(void){
   // Modules Activation
   //////////////////////////////
   // Internal
-  for (i=0;i<MODULE_INTERNAL_NUM;i++){
-    if ((wimu_config.enabled_modules & (1<<i)) > 0){
+  for (i=1;i<MODULE_INTERNAL_NUM;i++){
+    flag = (uint16_t)(1<<(i-1));
+    if ((wimu_config.enabled_modules & flag) > 0){
       setModuleState(i,STATE_OFFLINE);
     }
   }
@@ -1348,7 +1348,7 @@ void main_imu(void){
     }
 
    //Datalogger
-     if (isModuleOnline(MODULE_DATALOGGER)){
+     if (isModuleOnline(MODULE_DATALOGGER) && isModuleOnline(MODULE_IMU)){
         Qua_SampleNumber++;
         
         memcpy(&Quaternion_1s[0][Qua_SampleNumber-1],&imu.quaternion[0],4);

@@ -84,7 +84,7 @@ public:
     void setDefaults();
 
     bool saveToFile(QString filename);
-    bool loadFromFile(QString filename);
+    bool loadFromFile(QString filename, WIMUSettings *currentSettings=NULL);
 
     void loadFromIMUConfig(WIMU::IMUConfig_Struct &config);
 

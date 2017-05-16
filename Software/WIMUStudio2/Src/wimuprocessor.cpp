@@ -99,7 +99,7 @@ bool WimuProcessor::preProcess(QString path){
     }
 
     for (int i=0; i<folders.count(); i++){
-        WIMUConfig* new_conf = new WIMUConfig(m_settings);
+        WIMUConfig* new_conf = new WIMUConfig(*m_settings);
         if (new_conf->loadFromFile(path + "/" + folders.at(i) + "/CONFIG.WCF")){
             m_config = new_conf;
             break;

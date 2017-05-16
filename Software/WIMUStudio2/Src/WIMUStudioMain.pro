@@ -90,17 +90,16 @@ RC_ICONS = images/WIMU2.ico
 #Copy required files
 
 #HTML map
-extra_libs.files = $$PWD/map.html
-CONFIG(debug, debug|release): extra_libs.path = $$OUT_PWD/debug
-CONFIG(release, debug|release): extra_libs.path = $$OUT_PWD/release
+#extra_libs.files = $$PWD/map.html
+#CONFIG(debug, debug|release): extra_libs.path = $$OUT_PWD/debug
+#CONFIG(release, debug|release): extra_libs.path = $$OUT_PWD/release
 
 #Firmware updater
-firmware.files = $$PWD/../Utils/STM32_DFULoader/Windows/* + $$PWD/../../Firmware/WIMU3/bin/*
+firmware.files = $$PWD/../Utils/STM32_DFULoader/Windows/* + $$PWD/../../../Firmware/WIMU3/bin/*
 CONFIG(debug, debug|release): firmware.path = $$OUT_PWD/debug/firmware
 CONFIG(release, debug|release): firmware.path = $$OUT_PWD/release/firmware
 
-INSTALLS += extra_libs \
-            firmware
+INSTALLS += firmware
 
 RESOURCES += \
     wimustudio2.qrc

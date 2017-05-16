@@ -24,6 +24,8 @@ public:
     void addWIMULog(WIMULog log);
     void setBasePaths(QList<QString> &base_paths);
 
+    quint32 previousMidnight(const quint32 &time);
+
     void updateDisplay();
 
 private:

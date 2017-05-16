@@ -37,7 +37,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->stkControls->setCurrentWidget(ui->pgEmpty);
     ui->wdgCentral->setLayout(new QVBoxLayout());
 
-    addToLog("Bienvenue dans le WIMU Studio 2! (Version 2.0.3)", WIMU::LogNormal);
+    addToLog("Bienvenue dans le WIMU Studio 2! (Version 2.0.4)", WIMU::LogNormal);
 
     connect(&m_clock,SIGNAL(timeout()),this,SLOT(clockUpdate()));
     connect(&m_connectTimer,SIGNAL(timeout()),this,SLOT(usbConnect()));
@@ -523,7 +523,8 @@ void MainWindow::usbConfigReceived(WIMUConfig config){
     // Check if config is valid
     if (config.general.sampling_rate!= 50 &&
         config.general.sampling_rate!= 100 &&
-        config.general.sampling_rate!= 200){
+        config.general.sampling_rate!= 200 &&
+        config.general.sampling_rate!= 500){
         m_wimuUSBDriver->wimuGetConfig();
         return;
     }
@@ -1310,7 +1311,7 @@ void MainWindow::folderItemClicked(QTreeWidgetItem* item, int col){
 
     if (QFile::exists(paths.first() + "/CONFIG.WCF")){
         //m_wimuConfig.hwId = m_wimuSettings->getHwId();
-        m_wimuConfig.loadFromFile(paths.first() + "/CONFIG.WCF");
+        m_wimuConfig.loadFromFile(paths.first() + "/CONFIG.WCF", &m_wimuSettings);
     }else{
         addToLog("Aucun fichier de configuration valide n'a été trouvé.",WIMU::LogError);
     }

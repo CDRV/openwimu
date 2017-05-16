@@ -86,7 +86,8 @@ void TimeBrowser::updateDisplay(){
 
     // Check if we have more data than reflected by the logs
     for (int i=0; i<m_dataEnds.count(); i++){
-        last_ts = qMax(last_ts, m_dataEnds.at(i));
+        if (m_dataEnds.at(i) < previousMidnight(m_logs.last().timestamp)+86400)
+            last_ts = qMax(last_ts, m_dataEnds.at(i));
     }
 
     if (last_ts > m_logs.last().timestamp){
@@ -277,6 +278,10 @@ void TimeBrowser::updateDisplay(){
         updateDisplayedTime();
     }
     m_refreshing = false;
+}
+
+quint32 TimeBrowser::previousMidnight(const quint32 &time){
+    return (time / 86400) * 86400;
 }
 
 void TimeBrowser::timeSliderValueChanged(int value){

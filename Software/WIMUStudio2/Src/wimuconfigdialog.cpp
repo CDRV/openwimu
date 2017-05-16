@@ -318,7 +318,7 @@ void WIMUConfigDialog::buttonLoadConfigClicked(){
 
     WIMUConfig config;
 
-    if (config.loadFromFile(filename)){
+    if (config.loadFromFile(filename, &m_currentSettings)){
         loadFromConfig(&config);
         QMessageBox::information(this,"Confirmation","Fichier " + filename + " chargé!");
     }else{

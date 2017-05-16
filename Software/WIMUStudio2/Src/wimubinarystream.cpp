@@ -139,7 +139,8 @@ WIMU::PowerFrame_Struct WIMUBinaryStream::convertToPowerFrame(WIMUConfig *config
         return power;
 
     if (!config){
-        current_config = new WIMUConfig();
+        WIMUSettings def_set;
+        current_config = new WIMUConfig(def_set);
         current_config->setDefaults();
     }
 

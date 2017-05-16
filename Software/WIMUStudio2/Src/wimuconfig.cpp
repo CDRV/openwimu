@@ -14,7 +14,6 @@ WIMUConfig::WIMUConfig(QObject *parent) :
     QObject(parent)
 {
     qRegisterMetaType<WIMUConfig>("WIMUConfig");
-
     setDefaults();
 }
 
@@ -91,14 +90,14 @@ void WIMUConfig::setDefaults(){
 
 void WIMUConfig::enableModule(WIMU::Modules_ID module, bool enable){
     if (enable){
-        enabled_modules |= (1 << (module));
+        enabled_modules |= (1 << (module-1));
     }else{
-        enabled_modules &= ~(1 << module);
+        enabled_modules &= ~(1 << (module-1));
     }
 }
 
 bool WIMUConfig::isModuleEnabled(WIMU::Modules_ID module){
-    return (enabled_modules & (1 << (module)))>0;
+    return (enabled_modules & (1 << (module-1)))>0;
 }
 
 bool WIMUConfig::saveToFile(QString filename){
@@ -119,7 +118,7 @@ bool WIMUConfig::saveToFile(QString filename){
 
 }
 
-bool WIMUConfig::loadFromFile(QString filename){
+bool WIMUConfig::loadFromFile(QString filename, WIMUSettings* currentSettings){
     QFile in_file;
     in_file.setFileName(filename);
 
@@ -129,6 +128,9 @@ bool WIMUConfig::loadFromFile(QString filename){
 
     QByteArray data = in_file.readAll();
     in_file.close();
+
+    if (currentSettings)
+        m_settings = *currentSettings;
 
     unserialize(&data);
 

@@ -86,7 +86,7 @@ void WIMU3DViewer::paintGL()
    glLoadIdentity();
 
    // Rotation of model, depending of quaternion value
-   QQuaternion world_mat = m_rotation * QQuaternion(0.707,0,0,0.707);
+   QQuaternion world_mat = m_rotation * QQuaternion(0.707f,0.f,0.f,0.707f);
    QMatrix3x3 quat_mat = world_mat.toRotationMatrix();
    QMatrix4x4 rot_mat((QGenericMatrix<3,3,float>) quat_mat);
    glMultMatrixf(rot_mat.constData());

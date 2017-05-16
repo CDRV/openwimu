@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "WIMU Studio 2"
-#define MyAppVersion "2.0.3"
+#define MyAppVersion "2.0.4"
 #define MyAppPublisher "ESTRAD"
 #define MyAppURL "http://www.telereadaptation.com"
 #define MyAppExeName "WIMUStudio2.exe"
@@ -38,8 +38,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; Application files
-Source: "..\..\..\..\..\..\..\Workspace\WIMU3\WIMUStudio2\64bits\Src\release\WIMUStudio2.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\Src\map.html"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\..\..\..\..\..\Workspace\WIMU3\WIMUStudio2\64bits\Release\Src\release\WIMUStudio2.exe"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "..\Src\map.html"; DestDir: "{app}"; Flags: ignoreversion
 Source: ".\qt.conf"; DestDir: "{app}"; Flags: ignoreversion
 
 ; Support files

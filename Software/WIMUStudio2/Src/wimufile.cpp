@@ -51,7 +51,7 @@ bool WIMUFile::load(bool ignore_timefile){
             if (!names.isEmpty()){
                 time_name = "TIME_" + names.last();
                 for (int i=names.count()-2; i>=0; i--){
-                    time_name = names.at(i) + "\\" + time_name;
+                    time_name = names.at(i) + "/" + time_name;
                 }
 
                 if (QFile::exists(time_name)){
@@ -98,7 +98,7 @@ bool WIMUFile::load(quint32 start_filetime, quint32 ts, qint32 len){
             if (!names.isEmpty()){
                 time_name = "TIME_" + names.last();
                 for (int i=names.count()-2; i>=0; i--){
-                    time_name = names.at(i) + "\\" + time_name;
+                    time_name = names.at(i) + "/" + time_name;
                 }
 
                 if (QFile::exists(time_name)){
@@ -147,7 +147,7 @@ bool WIMUFile::load(quint32 start_filetime, quint32 ts, qint32 len){
             if (!names.isEmpty()){
                 index_name = "INDEX_" + names.last();
                 for (int i=names.count()-2; i>=0; i--){
-                    index_name = names.at(i) + "\\" + index_name;
+                    index_name = names.at(i) + "/" + index_name;
                 }
                 if (QFile::exists(index_name)){
                     // Load time data

@@ -1,6 +1,8 @@
 Authors:
 - Simon Brière
 
+![WIMUGPS](https://github.com/introlab/openwimu/blob/master/images/WIMUGPS.jpg)
+
 Many wireless inertial measurement systems are commercially available. However, with those systems, it is usually complex to add new features, sensing capabilities and parameters customizations. The OpenWIMU project was created to address those limitations. More specifically:
   
   * To provide an open hardware platform with the following capabilities:

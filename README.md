@@ -1,3 +1,4 @@
+![Analytics](https://ga-beacon.appspot.com/UA-27707792-6/github-main?pixel)
 ## Authors:
 - Simon Brière
 

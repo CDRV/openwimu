@@ -1,4 +1,4 @@
-Authors:
+## Authors:
 - Simon Brière
 
 ![WIMUGPS](https://github.com/introlab/openwimu/blob/master/images/WIMUGPS.jpg)
@@ -19,3 +19,20 @@ Many wireless inertial measurement systems are commercially available. However, 
      - Module configuration and firmware upgrading
 
 WIMU is a diminutive of WIMUGPS, which stands for "Wireless Inertial Measurement Unit with Global Positionning System".
+
+## Screenshots
+
+### Bluetooth LE Streaming
+![BLE](https://github.com/introlab/openwimu/blob/master/images/WIMUStudio2_BLEStream.png)
+
+### WIMU Configuration
+![Config](https://github.com/introlab/openwimu/blob/master/images/WIMUStudio2_Config.png)
+
+### USB Streaming
+![USB](https://github.com/introlab/openwimu/blob/master/images/WIMUStudio2_USBStream.png)
+
+### Firmware Update
+![Firmware](https://github.com/introlab/openwimu/blob/master/images/WIMUStudio2_Updater.png)
+
+### File Viewer
+![FilesView](https://github.com/introlab/openwimu/blob/master/images/WIMUStudio2_Viewer.png)

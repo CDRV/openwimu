@@ -1,6 +1,7 @@
 ![Analytics](https://ga-beacon.appspot.com/UA-27707792-6/github-main?pixel)
 ## Authors:
 - Simon Brière
+- Mathieu Hamel
 
 ![WIMUGPS](https://github.com/introlab/openwimu/blob/master/images/WIMUGPS.jpg)
 
